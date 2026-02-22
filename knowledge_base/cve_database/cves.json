@@ -1,0 +1,47 @@
+[
+    {
+        "id": "CVE-2024-6387",
+        "description": "A signal handler race condition vulnerability exists in OpenSSH's server (sshd), where a client does not authenticate within LoginGraceTime seconds (120 by default), then sshd's SIGALRM handler is called asynchronously. This could allow an unauthenticated remote attacker to execute arbitrary code with root privileges.",
+        "cvss": 8.1,
+        "affected": "OpenSSH < 9.8",
+        "references": [
+            "https://nvd.nist.gov/vuln/detail/CVE-2024-6387"
+        ]
+    },
+    {
+        "id": "CVE-2021-4034",
+        "description": "A local privilege escalation vulnerability was found in polkit's pkexec utility. When pkexec is executed with an invalid argc, it tries to read argv[1] from memory, which does not exist. This can lead to arbitrary code execution with root privileges.",
+        "cvss": 7.8,
+        "affected": "polkit < 0.120",
+        "references": [
+            "https://nvd.nist.gov/vuln/detail/CVE-2021-4034"
+        ]
+    },
+    {
+        "id": "CVE-2021-3156",
+        "description": "A heap-based buffer overflow vulnerability exists in sudo before version 1.9.5p2 that allows a local attacker to gain root privileges by crafting a special command line.",
+        "cvss": 7.8,
+        "affected": "sudo < 1.9.5p2",
+        "references": [
+            "https://nvd.nist.gov/vuln/detail/CVE-2021-3156"
+        ]
+    },
+    {
+        "id": "CVE-2022-0847",
+        "description": "A flaw was found in the Linux kernel's pipe handling implementation. A local attacker could exploit this to overwrite data in arbitrary read-only files, leading to privilege escalation. This vulnerability is known as 'Dirty Pipe'.",
+        "cvss": 7.8,
+        "affected": "Linux kernel 5.8+",
+        "references": [
+            "https://nvd.nist.gov/vuln/detail/CVE-2022-0847"
+        ]
+    },
+    {
+        "id": "CVE-2023-44487",
+        "description": "The HTTP/2 protocol allows a denial of service (server resource consumption) because request cancellation can reset many streams quickly, as exploited in the wild in August through October 2023. Known as 'HTTP/2 Rapid Reset'.",
+        "cvss": 7.5,
+        "affected": "Various HTTP/2 implementations",
+        "references": [
+            "https://nvd.nist.gov/vuln/detail/CVE-2023-44487"
+        ]
+    }
+]

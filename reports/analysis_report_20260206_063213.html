@@ -1,0 +1,153 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>LogCEntry AI Security Report</title>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <style>
+        * { box-sizing: border-box; margin: 0; padding: 0; }
+        body { 
+            background: #f1f5f9; 
+            font-family: 'Inter', -apple-system, sans-serif; 
+            padding: 2rem; 
+            color: #334155;
+            line-height: 1.6;
+        }
+        .container { 
+            max-width: 900px; 
+            margin: 0 auto; 
+            background: white; 
+            border-radius: 16px; 
+            box-shadow: 0 10px 40px rgba(0,0,0,0.1);
+            overflow: hidden;
+        }
+        .header { 
+            background: linear-gradient(135deg, #4f46e5, #7c3aed); 
+            color: white; 
+            padding: 2.5rem; 
+            text-align: center;
+        }
+        .header h1 { font-size: 1.875rem; font-weight: 700; }
+        .header p { opacity: 0.9; margin-top: 0.5rem; }
+        .section { padding: 2rem; border-bottom: 1px solid #e2e8f0; }
+        .section:last-child { border-bottom: none; }
+        .section-title { 
+            font-size: 1.25rem; 
+            font-weight: 600; 
+            margin-bottom: 1rem; 
+            color: #1e293b;
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+        .severity-badge { 
+            display: inline-block; 
+            padding: 0.5rem 1rem; 
+            border-radius: 8px; 
+            font-weight: 600;
+            background-color: #f97316;
+            color: white;
+        }
+        .content-box { 
+            background: #f8fafc; 
+            border-left: 4px solid #6366f1; 
+            padding: 1.5rem; 
+            border-radius: 8px; 
+            margin-top: 1rem;
+        }
+        .ttps, .cves { margin-top: 1rem; }
+        code { 
+            background: #e0e7ff; 
+            padding: 0.125rem 0.375rem; 
+            border-radius: 4px;
+            font-size: 0.875rem;
+        }
+        ul { margin-left: 1.5rem; margin-top: 0.5rem; }
+        li { margin-bottom: 0.5rem; }
+        pre { 
+            white-space: pre-wrap; 
+            word-wrap: break-word; 
+            font-family: 'Fira Code', monospace;
+            font-size: 0.875rem;
+            background: #1e293b;
+            color: #e2e8f0;
+            padding: 1rem;
+            border-radius: 8px;
+            overflow-x: auto;
+        }
+        .meta { color: #64748b; font-size: 0.875rem; }
+        .footer { 
+            text-align: center; 
+            padding: 1.5rem; 
+            color: #64748b; 
+            font-size: 0.875rem;
+            background: #f8fafc;
+        }
+        .rag-context .context-item {
+            margin-bottom: 1rem;
+            padding-bottom: 1rem;
+            border-bottom: 1px dashed #cbd5e1;
+        }
+        .rag-context .context-item:last-child { border-bottom: none; }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>🛡️ LogCEntry AI Security Report</h1>
+            <p>AI-Powered Threat Intelligence Analysis</p>
+        </div>
+        
+        <div class="section">
+            <div class="section-title">📅 Report Information</div>
+            <p class="meta"><strong>Generated:</strong> February 06, 2026 at 06:32:13 AM</p>
+            <p class="meta"><strong>Analysis ID:</strong> 20260206_063213_061383</p>
+            <p class="meta"><strong>Confidence:</strong> High</p>
+        </div>
+        
+        <div class="section">
+            <div class="section-title">⚠️ Severity Assessment</div>
+            <span class="severity-badge">7/10 - HIGH</span>
+            <div class="ttps"><strong>MITRE ATT&CK:</strong> <code>T1190</code>, <code>T1110</code></div>
+            
+        </div>
+        
+        <div class="section">
+            <div class="section-title">🎯 Threat Assessment</div>
+            <div class="content-box">
+                <p>The logs indicate multiple failed SSH login attempts from a specific IP (192.168.1.100) targeting invalid users (admin and root), which suggests a brute-force attack (TTP: T1110 - Brute Force). Additionally, there are indications of potential exploitation attempts against the web server (TTP: T1190 - Exploit Public-Facing Application) and malware detection (CVE: multiple malware signatures).</p>
+            </div>
+        </div>
+        
+        <div class="section">
+            <div class="section-title">📖 Detailed Explanation</div>
+            <div class="content-box">
+                <p>The repeated failed login attempts from the same IP address targeting invalid users suggest an automated attack, likely a brute-force attempt to gain unauthorized access to the system. The presence of logs indicating attempts to access sensitive files (e.g., `/etc/passwd` and `/etc/shadow`) and the use of a known SQL injection tool (`sqlmap`) further supports the likelihood of an ongoing attack. The detection of malware in uploaded files indicates a potential compromise or an attempt to deliver malicious payloads, which raises the severity of the situation.</p>
+            </div>
+        </div>
+        
+        <div class="section">
+            <div class="section-title">🔧 Immediate Countermeasures</div>
+            <div class="content-box">
+                <ul><li>Block the IP address 192.168.1.100 at the firewall to prevent further access attempts.</li><li>Review and harden SSH configurations (e.g., disable root login, use key-based authentication).</li><li>Conduct a full malware scan and investigate the files flagged by ClamAV to assess potential compromises.</li></ul>
+            </div>
+        </div>
+        
+        
+        
+        <div class="section">
+            <div class="section-title">📝 Analyzed Input</div>
+            <pre>[2026-02-06T10:15:32+00:00] [sshd[12345]] Failed password for invalid user admin from 192.168.1.100 port 45678 ssh2
+[2026-02-06T10:15:33+00:00] [sshd[12345]] Failed password for invalid user admin from 192.168.1.100 port 45679 ssh2
+[2026-02-06T10:15:34+00:00] [sshd[12345]] Failed password for invalid user admin from 192.168.1.100 port 45680 ssh2
+[2026-02-06T10:15:35+00:00] [sshd[12346]] Failed password for invalid user root from 192.168.1.100 port 45681 ssh2
+[2026-02-06T10:15:36+00:00] [sshd[123...</pre>
+        </div>
+        
+        <div class="footer">
+            <p>Generated by LogCEntry AI v2.0 | RAG-Enhanced Threat Intelligence</p>
+        </div>
+    </div>
+</body>
+</html>

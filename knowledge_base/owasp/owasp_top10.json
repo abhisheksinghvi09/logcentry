@@ -1,0 +1,253 @@
+[
+    {
+        "id": "A01",
+        "name": "Broken Access Control",
+        "description": "Access control enforces policy such that users cannot act outside of their intended permissions. Failures can lead to unauthorized information disclosure, modification, or destruction of data. Common vulnerabilities include: bypassing access control checks by modifying URL, internal application state, or HTML page; viewing or editing someone else's account; privilege escalation; CORS misconfiguration; force browsing to authenticated pages.",
+        "severity": "critical",
+        "keywords": [
+            "403",
+            "401",
+            "unauthorized",
+            "forbidden",
+            "privilege",
+            "escalation",
+            "CORS",
+            "IDOR"
+        ],
+        "log_indicators": [
+            "403 Forbidden",
+            "401 Unauthorized",
+            "Access denied",
+            "Permission denied",
+            "escalate",
+            "admin access"
+        ],
+        "mitre_mapping": [
+            "T1068",
+            "T1548"
+        ]
+    },
+    {
+        "id": "A02",
+        "name": "Cryptographic Failures",
+        "description": "Previously 'Sensitive Data Exposure', this focuses on failures related to cryptography which often leads to exposure of sensitive data. Includes: transmission of data in clear text (HTTP, SMTP, FTP); weak cryptographic algorithms; improper key management; deprecated hash functions (MD5, SHA1).",
+        "severity": "critical",
+        "keywords": [
+            "cleartext",
+            "plaintext",
+            "MD5",
+            "SHA1",
+            "weak cipher",
+            "TLS",
+            "SSL",
+            "certificate"
+        ],
+        "log_indicators": [
+            "SSL error",
+            "certificate expired",
+            "weak cipher",
+            "TLSv1.0",
+            "TLSv1.1",
+            "SSLv3"
+        ],
+        "mitre_mapping": [
+            "T1040",
+            "T1557"
+        ]
+    },
+    {
+        "id": "A03",
+        "name": "Injection",
+        "description": "Injection flaws such as SQL, NoSQL, OS, and LDAP injection occur when untrusted data is sent to an interpreter as part of a command or query. Hostile data can trick the interpreter into executing unintended commands or accessing data without proper authorization.",
+        "severity": "critical",
+        "keywords": [
+            "SQL",
+            "SQLi",
+            "injection",
+            "UNION",
+            "SELECT",
+            "INSERT",
+            "command",
+            "exec",
+            "shell",
+            "LDAP"
+        ],
+        "log_indicators": [
+            "UNION SELECT",
+            "OR 1=1",
+            "'; DROP",
+            "cmd=",
+            "/bin/bash",
+            "exec(",
+            "eval(",
+            "sqlmap"
+        ],
+        "mitre_mapping": [
+            "T1190",
+            "T1059"
+        ]
+    },
+    {
+        "id": "A04",
+        "name": "Insecure Design",
+        "description": "A new category focusing on risks related to design and architectural flaws. Insecure design represents missing or ineffective security controls that should have been designed into the application. Without secure design patterns, vulnerabilities can be easily introduced.",
+        "severity": "high",
+        "keywords": [
+            "design flaw",
+            "architecture",
+            "threat model",
+            "business logic"
+        ],
+        "log_indicators": [
+            "bypass",
+            "logic error",
+            "unexpected state"
+        ],
+        "mitre_mapping": [
+            "T1211"
+        ]
+    },
+    {
+        "id": "A05",
+        "name": "Security Misconfiguration",
+        "description": "Security misconfiguration is commonly a result of insecure default configurations, incomplete or ad-hoc configurations, open cloud storage, misconfigured HTTP headers, unnecessary services, and verbose error messages containing sensitive information.",
+        "severity": "high",
+        "keywords": [
+            "misconfiguration",
+            "default password",
+            "debug",
+            "stack trace",
+            "directory listing",
+            "error message"
+        ],
+        "log_indicators": [
+            "stack trace",
+            "Exception:",
+            "debug=True",
+            "directory listing",
+            "index of /",
+            "default credentials"
+        ],
+        "mitre_mapping": [
+            "T1562"
+        ]
+    },
+    {
+        "id": "A06",
+        "name": "Vulnerable and Outdated Components",
+        "description": "Using components with known vulnerabilities can undermine application defenses. This includes operating systems, web/application servers, database management systems, APIs, and libraries. Components typically run with the same privileges as the application.",
+        "severity": "high",
+        "keywords": [
+            "CVE",
+            "outdated",
+            "vulnerable",
+            "deprecated",
+            "EOL",
+            "unpatched"
+        ],
+        "log_indicators": [
+            "CVE-",
+            "version",
+            "outdated",
+            "deprecated",
+            "security update"
+        ],
+        "mitre_mapping": [
+            "T1190",
+            "T1210"
+        ]
+    },
+    {
+        "id": "A07",
+        "name": "Identification and Authentication Failures",
+        "description": "Functions related to authentication and session management are often implemented incorrectly allowing attackers to compromise passwords, keys, or session tokens. Includes: automated brute force attacks, weak passwords, session fixation, exposed session IDs.",
+        "severity": "critical",
+        "keywords": [
+            "authentication",
+            "login",
+            "password",
+            "session",
+            "brute force",
+            "credential stuffing"
+        ],
+        "log_indicators": [
+            "Failed password",
+            "Invalid user",
+            "authentication failure",
+            "session expired",
+            "login attempt",
+            "brute force"
+        ],
+        "mitre_mapping": [
+            "T1110",
+            "T1078"
+        ]
+    },
+    {
+        "id": "A08",
+        "name": "Software and Data Integrity Failures",
+        "description": "Software and data integrity failures relate to code and infrastructure that does not protect against integrity violations. Examples: applications relying on plugins, libraries, or modules from untrusted sources; insecure CI/CD pipeline; auto-update without integrity verification.",
+        "severity": "high",
+        "keywords": [
+            "integrity",
+            "tampering",
+            "supply chain",
+            "CI/CD",
+            "deserialization"
+        ],
+        "log_indicators": [
+            "integrity check failed",
+            "checksum mismatch",
+            "signature invalid",
+            "deserialization error"
+        ],
+        "mitre_mapping": [
+            "T1195"
+        ]
+    },
+    {
+        "id": "A09",
+        "name": "Security Logging and Monitoring Failures",
+        "description": "Without logging and monitoring, breaches cannot be detected. Insufficient logging occurs when auditable events are not logged, warnings and errors generate no or inadequate log messages, logs are not monitored for suspicious activity.",
+        "severity": "medium",
+        "keywords": [
+            "logging",
+            "monitoring",
+            "audit",
+            "detection",
+            "alerting"
+        ],
+        "log_indicators": [
+            "log rotation failed",
+            "audit disabled",
+            "monitoring gap"
+        ],
+        "mitre_mapping": [
+            "T1562.002"
+        ]
+    },
+    {
+        "id": "A10",
+        "name": "Server-Side Request Forgery (SSRF)",
+        "description": "SSRF flaws occur when a web application fetches a remote resource without validating the user-supplied URL. It allows attackers to coerce the application to send crafted requests to unexpected destinations, even when protected by firewall or VPN.",
+        "severity": "critical",
+        "keywords": [
+            "SSRF",
+            "localhost",
+            "127.0.0.1",
+            "internal",
+            "metadata",
+            "169.254"
+        ],
+        "log_indicators": [
+            "169.254.169.254",
+            "localhost",
+            "127.0.0.1",
+            "internal IP",
+            "metadata service"
+        ],
+        "mitre_mapping": [
+            "T1090"
+        ]
+    }
+]

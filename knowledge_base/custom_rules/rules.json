@@ -1,0 +1,69 @@
+[
+    {
+        "id": "RULE001",
+        "name": "SSH Brute Force Detection",
+        "description": "Multiple failed SSH authentication attempts from the same source IP within a short time window. This pattern typically indicates an automated password guessing attack targeting the SSH service. Common attack tools include Hydra, Medusa, and NCrack.",
+        "severity": "high",
+        "patterns": [
+            "Failed password",
+            "authentication failure",
+            "sshd",
+            "Invalid user"
+        ],
+        "threshold": "5 failures in 60 seconds"
+    },
+    {
+        "id": "RULE002",
+        "name": "Privilege Escalation Attempt",
+        "description": "Attempted use of sudo or su commands by unauthorized users, or unusual privilege escalation patterns. This could indicate an attacker attempting to gain root access after initial compromise.",
+        "severity": "critical",
+        "patterns": [
+            "sudo",
+            "su",
+            "pkexec",
+            "not in sudoers",
+            "3 incorrect password attempts"
+        ],
+        "threshold": "Any occurrence"
+    },
+    {
+        "id": "RULE003",
+        "name": "Firewall Rule Modification",
+        "description": "Changes to iptables, ufw, or other firewall configurations. Unauthorized firewall modifications could indicate an attacker attempting to open backdoor access or disable security controls.",
+        "severity": "high",
+        "patterns": [
+            "iptables",
+            "ufw",
+            "ALLOW",
+            "DENY",
+            "firewalld",
+            "nftables"
+        ],
+        "threshold": "Any modification outside maintenance window"
+    },
+    {
+        "id": "RULE004",
+        "name": "Kernel Module Loading",
+        "description": "Loading of kernel modules, especially unknown or unsigned modules. Rootkits often use kernel modules to hide their presence and maintain persistence.",
+        "severity": "high",
+        "patterns": [
+            "insmod",
+            "modprobe",
+            "kernel:",
+            "module loaded"
+        ],
+        "threshold": "Any unexpected module"
+    },
+    {
+        "id": "RULE005",
+        "name": "Port Scan Detection",
+        "description": "Multiple connection attempts to different ports from the same source IP. This reconnaissance activity typically precedes targeted attacks.",
+        "severity": "medium",
+        "patterns": [
+            "SYN",
+            "connection refused",
+            "port"
+        ],
+        "threshold": "10 different ports in 60 seconds"
+    }
+]

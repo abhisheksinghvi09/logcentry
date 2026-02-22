@@ -1,0 +1,68 @@
+# Byte-compiled / optimized / DLL files
+__pycache__/
+*.py[cod]
+*$py.class
+
+# Virtual environments
+.venv/
+venv/
+env/
+ENV/
+.uvenv/
+
+# Distribution / packaging
+build/
+dist/
+*.egg-info/
+.eggs/
+pip-wheel-metadata/
+
+# Installer logs
+pip-log.txt
+pip-delete-this-directory.txt
+
+# Pytest / coverage
+.pytest_cache/
+.coverage
+htmlcov/
+coverage.xml
+
+# Mypy / caches
+.mypy_cache/
+.cache/
+
+# Logs
+*.log
+server.log
+demo.log
+
+# Environment files / secrets
+.env
+.env.*
+.secrets/
+secrets.*
+
+# Databases
+*.sqlite3
+*.db
+instance/
+
+# IDEs / editors
+.vscode/
+.idea/
+*.sublime-project
+*.sublime-workspace
+
+# Jupyter
+.ipynb_checkpoints
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Misc
+*.pem
+*.key
+*.crt
+node_modules/
+cython_debug/

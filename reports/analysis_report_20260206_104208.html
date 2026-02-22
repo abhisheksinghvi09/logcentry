@@ -1,0 +1,196 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>LogCEntry AI Security Report</title>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <style>
+        * { box-sizing: border-box; margin: 0; padding: 0; }
+        body { 
+            background: #f1f5f9; 
+            font-family: 'Inter', -apple-system, sans-serif; 
+            padding: 2rem; 
+            color: #334155;
+            line-height: 1.6;
+        }
+        .container { 
+            max-width: 900px; 
+            margin: 0 auto; 
+            background: white; 
+            border-radius: 16px; 
+            box-shadow: 0 10px 40px rgba(0,0,0,0.1);
+            overflow: hidden;
+        }
+        .header { 
+            background: linear-gradient(135deg, #4f46e5, #7c3aed); 
+            color: white; 
+            padding: 2.5rem; 
+            text-align: center;
+        }
+        .header h1 { font-size: 1.875rem; font-weight: 700; }
+        .header p { opacity: 0.9; margin-top: 0.5rem; }
+        .section { padding: 2rem; border-bottom: 1px solid #e2e8f0; }
+        .section:last-child { border-bottom: none; }
+        .section-title { 
+            font-size: 1.25rem; 
+            font-weight: 600; 
+            margin-bottom: 1rem; 
+            color: #1e293b;
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+        .severity-badge { 
+            display: inline-block; 
+            padding: 0.5rem 1rem; 
+            border-radius: 8px; 
+            font-weight: 600;
+            background-color: #ef4444;
+            color: white;
+        }
+        .content-box { 
+            background: #f8fafc; 
+            border-left: 4px solid #6366f1; 
+            padding: 1.5rem; 
+            border-radius: 8px; 
+            margin-top: 1rem;
+        }
+        .ttps, .cves { margin-top: 1rem; }
+        code { 
+            background: #e0e7ff; 
+            padding: 0.125rem 0.375rem; 
+            border-radius: 4px;
+            font-size: 0.875rem;
+        }
+        ul { margin-left: 1.5rem; margin-top: 0.5rem; }
+        li { margin-bottom: 0.5rem; }
+        pre { 
+            white-space: pre-wrap; 
+            word-wrap: break-word; 
+            font-family: 'Fira Code', monospace;
+            font-size: 0.875rem;
+            background: #1e293b;
+            color: #e2e8f0;
+            padding: 1rem;
+            border-radius: 8px;
+            overflow-x: auto;
+        }
+        .meta { color: #64748b; font-size: 0.875rem; }
+        .footer { 
+            text-align: center; 
+            padding: 1.5rem; 
+            color: #64748b; 
+            font-size: 0.875rem;
+            background: #f8fafc;
+        }
+        .rag-context .context-item {
+            margin-bottom: 1rem;
+            padding-bottom: 1rem;
+            border-bottom: 1px dashed #cbd5e1;
+        }
+        .rag-context .context-item:last-child { border-bottom: none; }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>🛡️ LogCEntry AI Security Report</h1>
+            <p>AI-Powered Threat Intelligence Analysis</p>
+        </div>
+        
+        <div class="section">
+            <div class="section-title">📅 Report Information</div>
+            <p class="meta"><strong>Generated:</strong> February 06, 2026 at 10:42:08 AM</p>
+            <p class="meta"><strong>Analysis ID:</strong> 20260206_104208_498587</p>
+            <p class="meta"><strong>Confidence:</strong> High</p>
+        </div>
+        
+        <div class="section">
+            <div class="section-title">⚠️ Severity Assessment</div>
+            <span class="severity-badge">9/10 - CRITICAL</span>
+            
+            <div class="cves"><strong>Related CVEs:</strong> <code>CVE-2021-44228</code></div>
+        </div>
+        
+        <div class="section">
+            <div class="section-title">🎯 Threat Assessment</div>
+            <div class="content-box">
+                <p>The logs indicate multiple attack vectors, including SQL injection attempts (CVE-2021-44228) and potential path traversal (TTPs: SQL Injection, Path Traversal). The presence of &quot;sqlmap&quot; suggests automated exploitation attempts targeting the application.
+- **Detailed Explanation:** The logs show repeated failed login attempts to the admin panel, indicating possible brute force activity (OWASP A07). Additionally, the entries from the IP 10.0.0.50 demonstrate clear SQL injection attempts, evidenced by the payloads &quot;id=1&#x27; OR &#x27;1&#x27;=&#x27;1&quot; and &quot;UNION SELECT * FROM users&quot;. Furthermore, the attempt to access &quot;/../../etc/passwd&quot; indicates a path traversal attack, which is a critical vulnerability (Context 2). The combination of these activities signifies a high likelihood of a coordinated attack aimed at exploiting vulnerabilities in the application.
+- **Immediate Countermeasures:**
+  - Implement rate limiting on login attempts to mitigate brute force attacks.
+  - Sanitize and validate all user inputs to prevent SQL injection and path traversal vulnerabilities.
+  - Review and harden security configurations to prevent unauthorized access to sensitive files and directories.</p>
+            </div>
+        </div>
+        
+        <div class="section">
+            <div class="section-title">📖 Detailed Explanation</div>
+            <div class="content-box">
+                <p>The logs show repeated failed login attempts to the admin panel, indicating possible brute force activity (OWASP A07). Additionally, the entries from the IP 10.0.0.50 demonstrate clear SQL injection attempts, evidenced by the payloads &quot;id=1&#x27; OR &#x27;1&#x27;=&#x27;1&quot; and &quot;UNION SELECT * FROM users&quot;. Furthermore, the attempt to access &quot;/../../etc/passwd&quot; indicates a path traversal attack, which is a critical vulnerability (Context 2). The combination of these activities signifies a high likelihood of a coordinated attack aimed at exploiting vulnerabilities in the application.
+- **Immediate Countermeasures:**
+  - Implement rate limiting on login attempts to mitigate brute force attacks.
+  - Sanitize and validate all user inputs to prevent SQL injection and path traversal vulnerabilities.
+  - Review and harden security configurations to prevent unauthorized access to sensitive files and directories.</p>
+            </div>
+        </div>
+        
+        <div class="section">
+            <div class="section-title">🔧 Immediate Countermeasures</div>
+            <div class="content-box">
+                <ul><li>Implement rate limiting on login attempts to mitigate brute force attacks.</li><li>Sanitize and validate all user inputs to prevent SQL injection and path traversal vulnerabilities.</li><li>Review and harden security configurations to prevent unauthorized access to sensitive files and directories.</li></ul>
+            </div>
+        </div>
+        
+        
+            <div class="section">
+                <div class="section-title">📚 Knowledge Base Context Used</div>
+                <div class="content-box rag-context">
+            
+                    <div class="context-item">
+                        <strong>Context 1:</strong>
+                        <p>OWASP A05: Security Misconfiguration
+
+Description: Security misconfiguration is commonly a result of insecure default configurations, incomplete or ad-hoc configurations, open cloud storage, misconfigured HTTP headers, unnecessary services, and verbose error messages containing sensitive information...</p>
+                    </div>
+                
+                    <div class="context-item">
+                        <strong>Context 2:</strong>
+                        <p>Sigma Rule: Path Traversal Attack Detection
+
+Description: Detects directory traversal attempts in web server logs. Attackers use sequences like ../ to escape the web root and access sensitive files.
+
+Detection Patterns: ../, ..\, %2e%2e%2f, %2e%2e/, ..%2f, /etc/passwd, /etc/shadow, C:\Windows, boot....</p>
+                    </div>
+                
+                    <div class="context-item">
+                        <strong>Context 3:</strong>
+                        <p>Threat Intelligence: EXPLOITATION
+Type: pattern
+
+Description: Common attack patterns and payloads found in logs
+
+Indicators:
+  - Pattern: &#x27; OR 1=1 (SQL Injection)
+  - Pattern: ../../../ (Path Traversal)
+  - Pattern: &lt;script&gt; (XSS Attack)
+  - Pattern: ${jndi: (Log4Shell (CVE-2021-44228))
+  - Pattern:...</p>
+                    </div>
+                </div></div>
+        
+        <div class="section">
+            <div class="section-title">📝 Analyzed Input</div>
+            <pre>[2026-02-06T10:15:32+00:00] [unknown] 192.168.1.100 - -  &quot;GET /admin/login HTTP/1.1&quot; 200 1234 &quot;-&quot; &quot;Mozilla/5.0 (Windows NT 10.0; Win64; x64) Chrome/120.0&quot;
+[2026-02-06T10:15:35+00:00] [unknown] 192.168.1.100 - -  &quot;POST /admin/login HTTP/1.1&quot; 401 89 &quot;-&quot; &quot;Mozilla/5.0 (Windows NT 10.0; Win64; x64) Chrome/120.0&quot;
+[2026-02-06T10:15:37+00:00] [unknown] 192.168.1.100 - -  &quot;POST /admin/login HTTP/1.1&quot; 401 89 &quot;-&quot; &quot;Mozilla/5.0 (Windows NT 10.0; Win64; x64) Chrome/120.0&quot;
+[2026-02-06T10:15:39+00:00] [unknown]...</pre>
+        </div>
+        
+        <div class="footer">
+            <p>Generated by LogCEntry AI v2.0 | RAG-Enhanced Threat Intelligence</p>
+        </div>
+    </div>
+</body>
+</html>

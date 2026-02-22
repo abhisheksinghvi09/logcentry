@@ -1,0 +1,213 @@
+[
+    {
+        "id": "ioc_malicious_ips",
+        "type": "ip_address",
+        "category": "command_and_control",
+        "description": "Known malicious IP addresses associated with command and control infrastructure",
+        "indicators": [
+            {
+                "value": "185.220.101.0/24",
+                "threat": "Tor Exit Nodes",
+                "confidence": "medium"
+            },
+            {
+                "value": "45.155.205.0/24",
+                "threat": "Known Botnet C2",
+                "confidence": "high"
+            },
+            {
+                "value": "194.26.29.0/24",
+                "threat": "Cobalt Strike Servers",
+                "confidence": "high"
+            }
+        ],
+        "severity": "critical",
+        "last_updated": "2026-01-15"
+    },
+    {
+        "id": "ioc_malicious_domains",
+        "type": "domain",
+        "category": "phishing",
+        "description": "Known malicious domains used in phishing campaigns and malware distribution",
+        "indicators": [
+            {
+                "pattern": "*-login.*",
+                "threat": "Generic phishing pattern",
+                "confidence": "medium"
+            },
+            {
+                "pattern": "*secure*update*",
+                "threat": "Fake update pages",
+                "confidence": "medium"
+            },
+            {
+                "pattern": "*.xyz",
+                "threat": "TLD abuse (context dependent)",
+                "confidence": "low"
+            }
+        ],
+        "severity": "high",
+        "last_updated": "2026-01-15"
+    },
+    {
+        "id": "ioc_user_agents",
+        "type": "user_agent",
+        "category": "scanner",
+        "description": "User agents associated with vulnerability scanners and attack tools",
+        "indicators": [
+            {
+                "value": "sqlmap",
+                "threat": "SQL Injection Tool",
+                "confidence": "high"
+            },
+            {
+                "value": "nikto",
+                "threat": "Web Scanner",
+                "confidence": "high"
+            },
+            {
+                "value": "nmap",
+                "threat": "Network Scanner",
+                "confidence": "medium"
+            },
+            {
+                "value": "masscan",
+                "threat": "Port Scanner",
+                "confidence": "high"
+            },
+            {
+                "value": "gobuster",
+                "threat": "Directory Bruteforcer",
+                "confidence": "high"
+            },
+            {
+                "value": "dirbuster",
+                "threat": "Directory Bruteforcer",
+                "confidence": "high"
+            },
+            {
+                "value": "wfuzz",
+                "threat": "Web Fuzzer",
+                "confidence": "high"
+            },
+            {
+                "value": "Wget",
+                "threat": "Automated Download (context dependent)",
+                "confidence": "low"
+            },
+            {
+                "value": "curl",
+                "threat": "Automated Request (context dependent)",
+                "confidence": "low"
+            }
+        ],
+        "severity": "medium",
+        "last_updated": "2026-01-15"
+    },
+    {
+        "id": "ioc_file_hashes",
+        "type": "hash",
+        "category": "malware",
+        "description": "Known malware file hashes (SHA256)",
+        "indicators": [
+            {
+                "hash_type": "sha256",
+                "value": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+                "threat": "Empty file hash (baseline)",
+                "confidence": "info"
+            },
+            {
+                "hash_type": "md5",
+                "pattern": "suspicious file upload",
+                "confidence": "context"
+            }
+        ],
+        "severity": "critical",
+        "last_updated": "2026-01-15"
+    },
+    {
+        "id": "ioc_suspicious_paths",
+        "type": "path",
+        "category": "webshell",
+        "description": "Suspicious file paths commonly used by attackers",
+        "indicators": [
+            {
+                "pattern": "/tmp/*.php",
+                "threat": "Webshell in temp",
+                "confidence": "high"
+            },
+            {
+                "pattern": "/var/www/*/uploads/*.php",
+                "threat": "Webshell in uploads",
+                "confidence": "high"
+            },
+            {
+                "pattern": "/.*/c99.*",
+                "threat": "C99 Shell",
+                "confidence": "critical"
+            },
+            {
+                "pattern": "/.well-known/acme-challenge/*.php",
+                "threat": "Hidden webshell",
+                "confidence": "high"
+            }
+        ],
+        "severity": "critical",
+        "last_updated": "2026-01-15"
+    },
+    {
+        "id": "ioc_attack_signatures",
+        "type": "pattern",
+        "category": "exploitation",
+        "description": "Common attack patterns and payloads found in logs",
+        "indicators": [
+            {
+                "pattern": "' OR 1=1",
+                "threat": "SQL Injection",
+                "confidence": "high"
+            },
+            {
+                "pattern": "../../../",
+                "threat": "Path Traversal",
+                "confidence": "high"
+            },
+            {
+                "pattern": "<script>",
+                "threat": "XSS Attack",
+                "confidence": "high"
+            },
+            {
+                "pattern": "${jndi:",
+                "threat": "Log4Shell (CVE-2021-44228)",
+                "confidence": "critical"
+            },
+            {
+                "pattern": "{{",
+                "threat": "SSTI Attempt",
+                "confidence": "medium"
+            },
+            {
+                "pattern": "() { :; };",
+                "threat": "Shellshock",
+                "confidence": "critical"
+            },
+            {
+                "pattern": "/etc/passwd",
+                "threat": "LFI Attempt",
+                "confidence": "high"
+            },
+            {
+                "pattern": "cmd.exe",
+                "threat": "Windows Command Execution",
+                "confidence": "high"
+            },
+            {
+                "pattern": "/bin/bash",
+                "threat": "Shell Execution Attempt",
+                "confidence": "medium"
+            }
+        ],
+        "severity": "high",
+        "last_updated": "2026-01-15"
+    }
+]

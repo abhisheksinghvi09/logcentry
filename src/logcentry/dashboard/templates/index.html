@@ -1,0 +1,2122 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>LogCentry Dashboard</title>
+    <link
+        href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600&family=JetBrains+Mono:wght@400;500&display=swap"
+        rel="stylesheet">
+    <style>
+        :root {
+            --bg-primary: #1a1d29;
+            --bg-secondary: #232735;
+            --bg-card: #2a2e3d;
+            --bg-hover: #323648;
+            --text-primary: #e8eaed;
+            --text-secondary: #9aa0a6;
+            --text-muted: #5f6368;
+            --accent-blue: #6b9eff;
+            --accent-green: #72d999;
+            --accent-yellow: #ffd666;
+            --accent-red: #f47068;
+            --accent-purple: #b794f4;
+            --border-color: #3c4150;
+            --shadow: 0 4px 20px rgba(0, 0, 0, 0.25);
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Inter', -apple-system, sans-serif;
+            background: var(--bg-primary);
+            color: var(--text-primary);
+            min-height: 100vh;
+            line-height: 1.6;
+        }
+
+        /* Header */
+        .header {
+            background: var(--bg-secondary);
+            padding: 0.875rem 1.5rem;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            border-bottom: 1px solid var(--border-color);
+            position: sticky;
+            top: 0;
+            z-index: 100;
+        }
+
+        .logo {
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+            font-size: 1.25rem;
+            font-weight: 600;
+            color: var(--text-primary);
+        }
+
+        .logo-icon {
+            font-size: 1.5rem;
+        }
+
+        .status-badge {
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+            padding: 0.375rem 0.75rem;
+            background: var(--bg-card);
+            border-radius: 20px;
+            font-size: 0.8rem;
+            color: var(--text-secondary);
+        }
+
+        .status-dot {
+            width: 8px;
+            height: 8px;
+            border-radius: 50%;
+            background: var(--accent-green);
+        }
+
+        /* Main Layout */
+        .main {
+            display: grid;
+            grid-template-columns: 1fr 380px;
+            gap: 1.25rem;
+            padding: 1.25rem;
+            height: calc(100vh - 60px);
+            max-width: 1800px;
+            margin: 0 auto;
+        }
+
+        /* Log Stream */
+        .log-panel {
+            background: var(--bg-secondary);
+            border-radius: 12px;
+            overflow: hidden;
+            display: flex;
+            flex-direction: column;
+            border: 1px solid var(--border-color);
+        }
+
+        .panel-header {
+            padding: 1rem 1.25rem;
+            background: var(--bg-card);
+            border-bottom: 1px solid var(--border-color);
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .panel-title {
+            font-size: 0.9rem;
+            font-weight: 500;
+            color: var(--text-primary);
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+
+        .log-count {
+            font-size: 0.8rem;
+            color: var(--text-muted);
+            background: var(--bg-hover);
+            padding: 0.25rem 0.6rem;
+            border-radius: 12px;
+        }
+
+        .log-entries {
+            flex: 1;
+            overflow-y: auto;
+            padding: 0.5rem;
+        }
+
+        .log-entries::-webkit-scrollbar {
+            width: 6px;
+        }
+
+        .log-entries::-webkit-scrollbar-track {
+            background: transparent;
+        }
+
+        .log-entries::-webkit-scrollbar-thumb {
+            background: var(--border-color);
+            border-radius: 3px;
+        }
+
+        .log-entry {
+            padding: 0.625rem 0.875rem;
+            margin: 0.25rem 0;
+            background: var(--bg-card);
+            border-radius: 8px;
+            border-left: 3px solid var(--text-muted);
+            font-family: 'JetBrains Mono', monospace;
+            font-size: 0.8rem;
+            display: flex;
+            align-items: flex-start;
+            gap: 0.75rem;
+            transition: background 0.15s;
+        }
+
+        .log-entry:hover {
+            background: var(--bg-hover);
+        }
+
+        .log-entry.info {
+            border-left-color: var(--accent-blue);
+        }
+
+        .log-entry.warning {
+            border-left-color: var(--accent-yellow);
+        }
+
+        .log-entry.error {
+            border-left-color: var(--accent-red);
+        }
+
+        .log-entry.security {
+            border-left-color: var(--accent-purple);
+        }
+
+        .log-entry.debug {
+            border-left-color: var(--text-muted);
+        }
+
+        .log-time {
+            color: var(--text-muted);
+            font-size: 0.75rem;
+            white-space: nowrap;
+        }
+
+        .log-level {
+            font-size: 0.65rem;
+            font-weight: 500;
+            padding: 0.15rem 0.4rem;
+            border-radius: 4px;
+            text-transform: uppercase;
+            white-space: nowrap;
+        }
+
+        .log-level.info {
+            background: rgba(107, 158, 255, 0.15);
+            color: var(--accent-blue);
+        }
+
+        .log-level.warning {
+            background: rgba(255, 214, 102, 0.15);
+            color: var(--accent-yellow);
+        }
+
+        .log-level.error {
+            background: rgba(244, 112, 104, 0.15);
+            color: var(--accent-red);
+        }
+
+        .log-level.security {
+            background: rgba(183, 148, 244, 0.15);
+            color: var(--accent-purple);
+        }
+
+        .log-level.debug {
+            background: rgba(95, 99, 104, 0.15);
+            color: var(--text-muted);
+        }
+
+        .log-message {
+            flex: 1;
+            color: var(--text-secondary);
+            word-break: break-word;
+        }
+
+        /* Sidebar */
+        .sidebar {
+            display: flex;
+            flex-direction: column;
+            gap: 1rem;
+            overflow-y: auto;
+        }
+
+        .card {
+            background: var(--bg-secondary);
+            border-radius: 12px;
+            border: 1px solid var(--border-color);
+            overflow: hidden;
+        }
+
+        .card-header {
+            padding: 0.875rem 1rem;
+            background: var(--bg-card);
+            border-bottom: 1px solid var(--border-color);
+            font-size: 0.85rem;
+            font-weight: 500;
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+
+        .card-body {
+            padding: 1rem;
+        }
+
+        /* Stats */
+        .stats-grid {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 0.75rem;
+        }
+
+        .stat-item {
+            text-align: center;
+            padding: 0.875rem;
+            background: var(--bg-card);
+            border-radius: 8px;
+        }
+
+        .stat-value {
+            font-size: 1.5rem;
+            font-weight: 600;
+            color: var(--accent-blue);
+        }
+
+        .stat-value.errors {
+            color: var(--accent-red);
+        }
+
+        .stat-value.security {
+            color: var(--accent-purple);
+        }
+
+        .stat-value.threat {
+            color: var(--accent-yellow);
+        }
+
+        .stat-label {
+            font-size: 0.7rem;
+            color: var(--text-muted);
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            margin-top: 0.25rem;
+        }
+
+        /* Buttons */
+        .btn {
+            padding: 0.625rem 1rem;
+            background: var(--accent-blue);
+            border: none;
+            border-radius: 8px;
+            color: #fff;
+            font-size: 0.85rem;
+            font-weight: 500;
+            cursor: pointer;
+            transition: all 0.2s;
+            width: 100%;
+        }
+
+        .btn:hover {
+            background: #5a8af0;
+            transform: translateY(-1px);
+        }
+
+        .btn:active {
+            transform: translateY(0);
+        }
+
+        .btn:disabled {
+            opacity: 0.6;
+            cursor: not-allowed;
+        }
+
+        /* API Key */
+        .api-input {
+            width: 100%;
+            padding: 0.625rem 0.875rem;
+            background: var(--bg-card);
+            border: 1px solid var(--border-color);
+            border-radius: 8px;
+            color: var(--text-primary);
+            font-family: 'JetBrains Mono', monospace;
+            font-size: 0.8rem;
+            margin-bottom: 0.75rem;
+        }
+
+        .api-input:focus {
+            outline: none;
+            border-color: var(--accent-blue);
+        }
+
+        /* Analysis Results */
+        .analysis-result {
+            margin-top: 1rem;
+        }
+
+        .threat-card {
+            background: var(--bg-card);
+            border-radius: 10px;
+            overflow: hidden;
+        }
+
+        .threat-header {
+            padding: 1rem;
+            display: flex;
+            align-items: center;
+            gap: 1rem;
+            border-bottom: 1px solid var(--border-color);
+        }
+
+        .threat-score {
+            font-size: 2rem;
+            font-weight: 600;
+            min-width: 60px;
+            text-align: center;
+        }
+
+        .threat-score.low {
+            color: var(--accent-green);
+        }
+
+        .threat-score.medium {
+            color: var(--accent-yellow);
+        }
+
+        .threat-score.high {
+            color: var(--accent-red);
+        }
+
+        .threat-info {
+            flex: 1;
+        }
+
+        .threat-label {
+            font-size: 0.9rem;
+            font-weight: 500;
+            color: var(--text-primary);
+        }
+
+        .threat-sublabel {
+            font-size: 0.75rem;
+            color: var(--text-muted);
+        }
+
+        /* Expandable Sections */
+        .section {
+            border-top: 1px solid var(--border-color);
+        }
+
+        .section-header {
+            padding: 0.75rem 1rem;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            cursor: pointer;
+            background: transparent;
+            transition: background 0.15s;
+        }
+
+        .section-header:hover {
+            background: var(--bg-hover);
+        }
+
+        .section-title {
+            font-size: 0.8rem;
+            font-weight: 500;
+            color: var(--text-secondary);
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+
+        .section-toggle {
+            font-size: 0.7rem;
+            color: var(--text-muted);
+            transition: transform 0.2s;
+        }
+
+        .section-content {
+            padding: 0 1rem 1rem;
+            font-size: 0.8rem;
+            color: var(--text-secondary);
+            line-height: 1.7;
+            display: none;
+        }
+
+        .section.open .section-content {
+            display: block;
+        }
+
+        .section.open .section-toggle {
+            transform: rotate(180deg);
+        }
+
+        /* Patch Suggestions */
+        .patch-list {
+            display: flex;
+            flex-direction: column;
+            gap: 0.5rem;
+        }
+
+        .patch-item {
+            padding: 0.75rem;
+            background: var(--bg-secondary);
+            border-radius: 8px;
+            border-left: 3px solid var(--accent-blue);
+        }
+
+        .patch-item.high {
+            border-left-color: var(--accent-red);
+        }
+
+        .patch-item.medium {
+            border-left-color: var(--accent-yellow);
+        }
+
+        .patch-item.low {
+            border-left-color: var(--accent-green);
+        }
+
+        .patch-meta {
+            display: flex;
+            gap: 0.5rem;
+            margin-bottom: 0.375rem;
+        }
+
+        .patch-priority {
+            font-size: 0.65rem;
+            font-weight: 600;
+            text-transform: uppercase;
+            padding: 0.125rem 0.375rem;
+            border-radius: 4px;
+        }
+
+        .patch-priority.high {
+            background: rgba(244, 112, 104, 0.2);
+            color: var(--accent-red);
+        }
+
+        .patch-priority.medium {
+            background: rgba(255, 214, 102, 0.2);
+            color: var(--accent-yellow);
+        }
+
+        .patch-priority.low {
+            background: rgba(114, 217, 153, 0.2);
+            color: var(--accent-green);
+        }
+
+        .patch-category {
+            font-size: 0.65rem;
+            color: var(--text-muted);
+            background: var(--bg-hover);
+            padding: 0.125rem 0.375rem;
+            border-radius: 4px;
+        }
+
+        .patch-title {
+            font-weight: 500;
+            color: var(--text-primary);
+            font-size: 0.8rem;
+            margin-bottom: 0.25rem;
+        }
+
+        .patch-desc {
+            font-size: 0.75rem;
+            color: var(--text-secondary);
+            line-height: 1.5;
+        }
+
+        /* Countermeasures */
+        .countermeasure-list {
+            list-style: none;
+        }
+
+        .countermeasure-list li {
+            padding: 0.5rem 0;
+            padding-left: 1.25rem;
+            position: relative;
+            color: var(--text-secondary);
+            font-size: 0.8rem;
+            border-bottom: 1px solid var(--border-color);
+        }
+
+        .countermeasure-list li:last-child {
+            border-bottom: none;
+        }
+
+        .countermeasure-list li::before {
+            content: "→";
+            position: absolute;
+            left: 0;
+            color: var(--accent-green);
+        }
+
+        /* Code Block */
+        .code-block {
+            font-family: 'JetBrains Mono', monospace;
+            font-size: 0.75rem;
+            background: var(--bg-card);
+            padding: 0.75rem;
+            border-radius: 6px;
+            overflow-x: auto;
+            color: var(--text-secondary);
+            white-space: pre-wrap;
+        }
+
+        /* Loading State */
+        .loading {
+            text-align: center;
+            padding: 2rem;
+            color: var(--text-muted);
+        }
+
+        .loading::after {
+            content: '';
+            display: inline-block;
+            width: 16px;
+            height: 16px;
+            border: 2px solid var(--border-color);
+            border-top-color: var(--accent-blue);
+            border-radius: 50%;
+            animation: spin 1s linear infinite;
+            margin-left: 0.5rem;
+            vertical-align: middle;
+        }
+
+        @keyframes spin {
+            to {
+                transform: rotate(360deg);
+            }
+        }
+
+        /* Placeholder */
+        .placeholder {
+            text-align: center;
+            padding: 3rem 1rem;
+            color: var(--text-muted);
+        }
+
+        .placeholder-icon {
+            font-size: 2.5rem;
+            margin-bottom: 0.75rem;
+            opacity: 0.5;
+        }
+
+        /* Auth Modal */
+        .modal-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: rgba(0, 0, 0, 0.7);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            z-index: 1000;
+            opacity: 0;
+            visibility: hidden;
+            transition: opacity 0.3s, visibility 0.3s;
+        }
+
+        .modal-overlay.active {
+            opacity: 1;
+            visibility: visible;
+        }
+
+        .modal {
+            background: var(--bg-secondary);
+            border-radius: 16px;
+            padding: 2rem;
+            width: 100%;
+            max-width: 400px;
+            border: 1px solid var(--border-color);
+            transform: translateY(20px);
+            transition: transform 0.3s;
+        }
+
+        .modal-overlay.active .modal {
+            transform: translateY(0);
+        }
+
+        .modal-title {
+            font-size: 1.5rem;
+            font-weight: 600;
+            margin-bottom: 0.5rem;
+            text-align: center;
+        }
+
+        .modal-subtitle {
+            color: var(--text-muted);
+            text-align: center;
+            margin-bottom: 1.5rem;
+            font-size: 0.9rem;
+        }
+
+        .form-group {
+            margin-bottom: 1rem;
+        }
+
+        .form-label {
+            display: block;
+            font-size: 0.85rem;
+            color: var(--text-secondary);
+            margin-bottom: 0.5rem;
+        }
+
+        .form-input {
+            width: 100%;
+            padding: 0.75rem 1rem;
+            background: var(--bg-card);
+            border: 1px solid var(--border-color);
+            border-radius: 8px;
+            color: var(--text-primary);
+            font-size: 0.95rem;
+            transition: border-color 0.2s;
+        }
+
+        .form-input:focus {
+            outline: none;
+            border-color: var(--accent-blue);
+        }
+
+        .btn-primary {
+            width: 100%;
+            padding: 0.875rem;
+            background: var(--accent-blue);
+            color: white;
+            border: none;
+            border-radius: 8px;
+            font-size: 1rem;
+            font-weight: 500;
+            cursor: pointer;
+            transition: opacity 0.2s;
+        }
+
+        .btn-primary:hover {
+            opacity: 0.9;
+        }
+
+        .btn-primary:disabled {
+            opacity: 0.5;
+            cursor: not-allowed;
+        }
+
+        .modal-switch {
+            text-align: center;
+            margin-top: 1.25rem;
+            font-size: 0.9rem;
+            color: var(--text-muted);
+        }
+
+        .modal-switch a {
+            color: var(--accent-blue);
+            cursor: pointer;
+            text-decoration: none;
+        }
+
+        .modal-switch a:hover {
+            text-decoration: underline;
+        }
+
+        .auth-error {
+            background: rgba(244, 112, 104, 0.1);
+            color: var(--accent-red);
+            padding: 0.75rem;
+            border-radius: 8px;
+            font-size: 0.85rem;
+            margin-bottom: 1rem;
+            display: none;
+        }
+
+        .auth-error.show {
+            display: block;
+        }
+
+        /* User Dropdown */
+        .user-menu {
+            position: relative;
+        }
+
+        .user-btn {
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+            padding: 0.5rem 1rem;
+            background: var(--bg-card);
+            border: 1px solid var(--border-color);
+            border-radius: 8px;
+            color: var(--text-primary);
+            cursor: pointer;
+            font-size: 0.9rem;
+            transition: background 0.2s;
+        }
+
+        .user-btn:hover {
+            background: var(--bg-hover);
+        }
+
+        .user-avatar {
+            width: 28px;
+            height: 28px;
+            background: var(--accent-purple);
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 0.8rem;
+            font-weight: 600;
+        }
+
+        .user-dropdown {
+            position: absolute;
+            top: calc(100% + 8px);
+            right: 0;
+            background: var(--bg-secondary);
+            border: 1px solid var(--border-color);
+            border-radius: 12px;
+            min-width: 220px;
+            padding: 0.5rem;
+            display: none;
+            z-index: 200;
+        }
+
+        .user-menu.open .user-dropdown {
+            display: block;
+        }
+
+        .dropdown-item {
+            display: flex;
+            align-items: center;
+            gap: 0.75rem;
+            padding: 0.75rem;
+            border-radius: 8px;
+            color: var(--text-secondary);
+            font-size: 0.85rem;
+            cursor: pointer;
+            transition: background 0.2s;
+        }
+
+        .dropdown-item:hover {
+            background: var(--bg-hover);
+            color: var(--text-primary);
+        }
+
+        .dropdown-divider {
+            height: 1px;
+            background: var(--border-color);
+            margin: 0.5rem 0;
+        }
+
+        .project-selector {
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+            padding: 0.5rem 1rem;
+            background: var(--bg-card);
+            border: 1px solid var(--border-color);
+            border-radius: 8px;
+            color: var(--text-secondary);
+            font-size: 0.85rem;
+        }
+
+        .project-selector select {
+            background: transparent;
+            border: none;
+            color: var(--text-primary);
+            font-size: 0.85rem;
+            cursor: pointer;
+            outline: none;
+        }
+
+        .project-selector select option {
+            background: var(--bg-secondary);
+        }
+
+        .header-right {
+            display: flex;
+            align-items: center;
+            gap: 1rem;
+        }
+
+        .login-btn {
+            padding: 0.5rem 1.25rem;
+            background: var(--accent-blue);
+            color: white;
+            border: none;
+            border-radius: 8px;
+            font-size: 0.9rem;
+            cursor: pointer;
+            transition: opacity 0.2s;
+        }
+
+        .login-btn:hover {
+            opacity: 0.9;
+        }
+
+        /* Login Prompt */
+        .login-prompt {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            min-height: calc(100vh - 60px);
+            padding: 2rem;
+        }
+
+        .login-prompt-content {
+            text-align: center;
+            max-width: 400px;
+            padding: 3rem 2rem;
+            background: var(--bg-secondary);
+            border-radius: 16px;
+            border: 1px solid var(--border-color);
+        }
+
+        .login-prompt-icon {
+            font-size: 4rem;
+            margin-bottom: 1rem;
+        }
+
+        .login-prompt-content h2 {
+            font-size: 1.75rem;
+            margin-bottom: 0.5rem;
+        }
+
+        .login-prompt-content p {
+            color: var(--text-secondary);
+            font-size: 0.95rem;
+        }
+
+        /* API Key List */
+        .api-keys-list {
+            display: flex;
+            flex-direction: column;
+            gap: 0.5rem;
+        }
+
+        .api-key-item {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 0.5rem;
+            background: rgba(255, 255, 255, 0.05);
+            border-radius: 6px;
+            font-size: 0.85rem;
+        }
+
+        .api-key-info {
+            display: flex;
+            flex-direction: column;
+            gap: 0.25rem;
+        }
+
+        .api-key-name {
+            font-weight: 500;
+        }
+
+        .api-key-value {
+            font-family: 'JetBrains Mono', monospace;
+            color: var(--text-muted);
+            font-size: 0.75rem;
+        }
+
+        .btn-sm {
+            padding: 0.25rem 0.5rem;
+            font-size: 0.75rem;
+            background: rgba(255, 255, 255, 0.1);
+            border: 1px solid rgba(255, 255, 255, 0.2);
+            border-radius: 4px;
+            color: white;
+            cursor: pointer;
+        }
+
+        .btn-sm:hover {
+            background: rgba(255, 255, 255, 0.2);
+        }
+
+        .btn-danger {
+            color: var(--accent-red);
+            border-color: rgba(220, 38, 38, 0.3);
+        }
+
+        .btn-danger:hover {
+            background: rgba(220, 38, 38, 0.1);
+        }
+
+        .alerts-list {
+            display: flex;
+            flex-direction: column;
+            gap: 0.5rem;
+            max-height: 300px;
+            overflow-y: auto;
+        }
+
+        .alert-item {
+            padding: 0.75rem;
+            background: var(--bg-primary);
+            border-radius: 8px;
+            border-left: 3px solid var(--accent-blue);
+            font-size: 0.8rem;
+        }
+
+        .alert-item.critical {
+            border-left-color: var(--accent-red);
+        }
+
+        .alert-item.high {
+            border-left-color: var(--accent-red);
+        }
+
+        .alert-item.medium {
+            border-left-color: var(--accent-yellow);
+        }
+
+        .alert-item.low {
+            border-left-color: var(--accent-blue);
+        }
+
+        .alert-header {
+            display: flex;
+            justify-content: space-between;
+            margin-bottom: 0.25rem;
+        }
+
+        .alert-title {
+            font-weight: 600;
+            color: var(--text-primary);
+        }
+
+        .alert-time {
+            color: var(--text-muted);
+            font-size: 0.7rem;
+        }
+
+        .alert-summary {
+            color: var(--text-secondary);
+            margin-bottom: 0.5rem;
+        }
+
+        .alert-actions {
+            display: flex;
+            gap: 0.5rem;
+        }
+
+        .risk-list {
+            display: flex;
+            flex-direction: column;
+            gap: 0.5rem;
+        }
+
+        .risk-item {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 0.5rem;
+            background: var(--bg-primary);
+            border-radius: 6px;
+        }
+
+        .risk-score {
+            font-weight: bold;
+            color: var(--accent-red);
+        }
+
+        /* Collapsible Sidebar Cards */
+        .sidebar .card {
+            transition: all 0.3s ease;
+        }
+
+        .sidebar .card-header {
+            cursor: pointer;
+            user-select: none;
+            position: relative;
+            padding-right: 2rem;
+        }
+
+        .sidebar .card-header::after {
+            content: '▼';
+            position: absolute;
+            right: 1rem;
+            top: 50%;
+            transform: translateY(-50%);
+            transition: transform 0.3s ease;
+            font-size: 0.8rem;
+            opacity: 0.7;
+        }
+
+        .sidebar .card.collapsed .card-header::after {
+            transform: translateY(-50%) rotate(-90deg);
+        }
+
+        .sidebar .card-body {
+            transition: max-height 0.3s cubic-bezier(0, 1, 0, 1), opacity 0.3s ease, padding 0.3s ease;
+            max-height: 2000px;
+            /* Limit for transition */
+            opacity: 1;
+            overflow: hidden;
+        }
+
+        .sidebar .card.collapsed .card-body {
+            max-height: 0;
+            opacity: 0;
+            padding-top: 0;
+            padding-bottom: 0;
+        }
+
+        /* Tab Navigation */
+        .tabs-nav {
+            display: flex;
+            gap: 1rem;
+            padding: 0 1.25rem;
+            margin-bottom: 1rem;
+            border-bottom: 1px solid var(--border-color);
+        }
+
+        .tab-btn {
+            background: transparent;
+            border: none;
+            color: var(--text-secondary);
+            padding: 0.75rem 1rem;
+            font-size: 0.95rem;
+            cursor: pointer;
+            border-bottom: 2px solid transparent;
+            transition: all 0.2s;
+        }
+
+        .tab-btn:hover {
+            color: var(--text-primary);
+        }
+
+        .tab-btn.active {
+            color: var(--accent-blue);
+            border-bottom-color: var(--accent-blue);
+            font-weight: 500;
+        }
+
+        .tab-pane {
+            display: none;
+            height: 100%;
+        }
+
+        .tab-pane.active {
+            display: block;
+        }
+
+        /* Security Dashboard Grid */
+        .security-dashboard {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(450px, 1fr));
+            gap: 1.5rem;
+            padding: 1.25rem;
+            height: calc(100vh - 120px);
+            overflow-y: auto;
+        }
+
+        .security-dashboard .card {
+            display: flex;
+            flex-direction: column;
+            min-height: 350px;
+        }
+
+        .security-dashboard .card-body {
+            flex: 1;
+            overflow-y: auto;
+            max-height: none !important;
+            /* Override collapsible */
+            padding: 1rem !important;
+            opacity: 1 !important;
+        }
+
+        /* Hide collapsible arrow in security dashboard */
+        .security-dashboard .card-header::after {
+            display: none;
+        }
+
+        /* Full width for bottom row */
+        .card.full-width {
+            grid-column: 1 / -1;
+        }
+
+        /* Adjust main layout for tabs */
+        .main {
+            display: block;
+            /* Override grid */
+            padding: 0;
+            height: auto;
+            max-width: 100%;
+        }
+
+        /* Live View specific layout (restoring old grid) */
+        .live-view-layout {
+            display: grid;
+            grid-template-columns: 1fr 380px;
+            gap: 1.25rem;
+            padding: 1.25rem;
+            height: calc(100vh - 120px);
+            /* Adjust for header + tabs */
+            max-width: 1800px;
+            margin: 0 auto;
+        }
+    </style>
+</head>
+
+<body>
+    <header class="header">
+        <div class="logo">
+            <span class="logo-icon">🛡️</span>
+            LogCentry
+        </div>
+        <div class="header-right">
+            <div class="status-badge">
+                <div class="status-dot"></div>
+                <span id="connection-status">Connecting...</span>
+            </div>
+
+            <!-- Project Selector (shown when logged in) -->
+            <div class="project-selector" id="project-selector" style="display: none;">
+                📁 <select id="project-select" onchange="switchProject(this.value)">
+                    <option value="">Select Project</option>
+                </select>
+            </div>
+
+            <!-- Login Button (shown when logged out) -->
+            <button class="login-btn" id="login-btn" onclick="showLoginModal()">Login</button>
+
+            <!-- User Menu (shown when logged in) -->
+            <div class="user-menu" id="user-menu" style="display: none;">
+                <button class="user-btn" onclick="toggleUserMenu()">
+                    <div class="user-avatar" id="user-avatar">?</div>
+                    <span id="user-name">User</span>
+                    ▼
+                </button>
+                <div class="user-dropdown">
+                    <div class="dropdown-item" onclick="showApiKeys()">🔑 API Keys</div>
+                    <div class="dropdown-item" onclick="showProjects()">📁 Projects</div>
+                    <div class="dropdown-divider"></div>
+                    <div class="dropdown-item" onclick="logout()">🚪 Logout</div>
+                </div>
+            </div>
+        </div>
+    </header>
+
+    <!-- Login Modal -->
+    <div class="modal-overlay" id="login-modal">
+        <div class="modal">
+            <div class="modal-title">Welcome Back</div>
+            <div class="modal-subtitle">Sign in to your LogCentry account</div>
+
+            <div class="auth-error" id="login-error"></div>
+
+            <form onsubmit="handleLogin(event)">
+                <div class="form-group">
+                    <label class="form-label">Email</label>
+                    <input type="email" class="form-input" id="login-email" placeholder="demo@logcentry.dev" required>
+                </div>
+                <div class="form-group">
+                    <label class="form-label">Password</label>
+                    <input type="password" class="form-input" id="login-password" placeholder="demo123" required>
+                </div>
+                <button type="submit" class="btn-primary" id="login-submit">Sign In</button>
+            </form>
+
+            <div class="modal-switch">
+                Don't have an account? <a onclick="showSignupModal()">Sign up</a>
+            </div>
+        </div>
+    </div>
+
+    <!-- Signup Modal -->
+    <div class="modal-overlay" id="signup-modal">
+        <div class="modal">
+            <div class="modal-title">Create Account</div>
+            <div class="modal-subtitle">Get started with LogCentry</div>
+
+            <div class="auth-error" id="signup-error"></div>
+
+            <form onsubmit="handleSignup(event)">
+                <div class="form-group">
+                    <label class="form-label">Name</label>
+                    <input type="text" class="form-input" id="signup-name" placeholder="Your name">
+                </div>
+                <div class="form-group">
+                    <label class="form-label">Email</label>
+                    <input type="email" class="form-input" id="signup-email" placeholder="you@example.com" required>
+                </div>
+                <div class="form-group">
+                    <label class="form-label">Password</label>
+                    <input type="password" class="form-input" id="signup-password" placeholder="Min 8 characters"
+                        required minlength="8">
+                </div>
+                <button type="submit" class="btn-primary" id="signup-submit">Create Account</button>
+            </form>
+
+            <div class="modal-switch">
+                Already have an account? <a onclick="showLoginModal()">Sign in</a>
+            </div>
+        </div>
+    </div>
+
+    <!-- Login Prompt (shown when logged out) -->
+    <div class="login-prompt" id="login-prompt">
+        <div class="login-prompt-content">
+            <div class="login-prompt-icon">🔐</div>
+            <h2>Welcome to LogCentry</h2>
+            <p>Sign in to view your security logs and analysis</p>
+            <button class="btn-primary" style="max-width: 300px; margin: 1.5rem auto 0;" onclick="showLoginModal()">Sign
+                In to Continue</button>
+            <p class="modal-switch" style="margin-top: 1rem;">
+                Don't have an account? <a onclick="showSignupModal()">Create one</a>
+            </p>
+        </div>
+    </div>
+
+    <main class="main" id="main-dashboard" style="display: none;">
+        <div class="tabs-nav">
+            <button class="tab-btn active" onclick="switchTab('live', event)">📋 Live Logs</button>
+            <button class="tab-btn" onclick="switchTab('security', event)">🛡️ Security Center</button>
+        </div>
+
+        <div id="tab-live" class="tab-pane active">
+            <div class="live-view-layout">
+                <section class="log-panel">
+                    <div class="panel-header">
+                        <div class="panel-title">
+                            📋 Live Log Stream
+                        </div>
+                        <span class="log-count" id="log-count">0 logs</span>
+                    </div>
+                    <div class="log-entries" id="log-entries">
+                        <div class="placeholder">
+                            <div class="placeholder-icon">📭</div>
+                            <div>Waiting for logs...</div>
+                            <div style="font-size: 0.75rem; margin-top: 0.5rem;">Send logs using the SDK or API</div>
+                        </div>
+                    </div>
+                </section>
+
+                <aside class="sidebar">
+                    <div class="card">
+                        <div class="card-header">📊 Statistics</div>
+                        <div class="card-body">
+                            <div class="stats-grid">
+                                <div class="stat-item">
+                                    <div class="stat-value" id="total-logs">0</div>
+                                    <div class="stat-label">Total Logs</div>
+                                </div>
+                                <div class="stat-item">
+                                    <div class="stat-value errors" id="error-count">0</div>
+                                    <div class="stat-label">Errors</div>
+                                </div>
+                                <div class="stat-item">
+                                    <div class="stat-value security" id="security-count">0</div>
+                                    <div class="stat-label">Security</div>
+                                </div>
+                                <div class="stat-item">
+                                    <div class="stat-value threat" id="threat-score">--</div>
+                                    <div class="stat-label">Threat Level</div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="card">
+                        <div class="card-header">
+                            <span>🔑 API Keys</span>
+                            <button class="btn-sm" onclick="createNewApiKey()">+ New Key</button>
+                        </div>
+                        <div class="card-body">
+                            <div id="api-keys-list" class="api-keys-list">
+                                <div class="loading-sm">Loading keys...</div>
+                            </div>
+                        </div>
+                    </div>
+                </aside>
+            </div>
+        </div>
+
+        <div id="tab-security" class="tab-pane">
+            <div class="security-dashboard">
+                <div class="card" style="grid-row: span 2;">
+                    <div class="card-header">
+                        <span>🚨 Recent Alerts</span>
+                        <span class="status-badge" style="font-size: 0.7rem; padding: 0.1rem 0.5rem;"
+                            id="active-alerts-count">0 Active</span>
+                    </div>
+                    <div class="card-body">
+                        <div id="alerts-list" class="alerts-list">
+                            <div class="loading-sm">Waiting for updates...</div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="card">
+                    <div class="card-header">👥 High Risk Entities</div>
+                    <div class="card-body">
+                        <div id="risk-list" class="risk-list">
+                            <div class="loading-sm">Waiting for updates...</div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="card full-width">
+                    <div class="card-header">🔍 AI Analysis</div>
+                    <div class="card-body">
+                        <button class="btn" onclick="runAnalysis()" id="analyze-btn"
+                            style="margin-bottom: 1rem;">Analyze Recent Logs</button>
+                        <div id="analysis-result" class="analysis-result"></div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </main>
+
+    <script>
+        // State management
+        let logCount = 0;
+        let errorCount = 0;
+        let securityCount = 0;
+        let seenLogIds = new Set();
+        let ws = null;
+        let reconnectAttempts = 0;
+        const MAX_RECONNECT_ATTEMPTS = 10;
+        const POLL_INTERVAL = 5000;
+
+        // WebSocket connection
+        function connectWebSocket() {
+            const protocol = window.location.protocol === 'https:' ? 'wss:' : 'ws:';
+            ws = new WebSocket(`${protocol}//${window.location.host}/ws/logs`);
+
+            ws.onopen = () => {
+                reconnectAttempts = 0;
+                updateConnectionStatus('Connected', 'connected');
+            };
+
+            ws.onclose = () => {
+                updateConnectionStatus('Disconnected', 'disconnected');
+                scheduleReconnect();
+            };
+
+            ws.onerror = () => {
+                updateConnectionStatus('Error', 'error');
+            };
+
+            ws.onmessage = (event) => {
+                try {
+                    const log = JSON.parse(event.data);
+                    addLogEntry(log);
+                } catch (e) {
+                    console.error('Failed to parse log:', e);
+                }
+            };
+        }
+
+        function scheduleReconnect() {
+            if (reconnectAttempts >= MAX_RECONNECT_ATTEMPTS) return;
+
+            const delay = Math.min(1000 * Math.pow(2, reconnectAttempts), 30000);
+            reconnectAttempts++;
+
+            updateConnectionStatus(`Reconnecting...`, 'reconnecting');
+
+            setTimeout(() => {
+                if (!ws || ws.readyState === WebSocket.CLOSED) {
+                    connectWebSocket();
+                }
+            }, delay);
+        }
+
+        function updateConnectionStatus(text, state) {
+            document.getElementById('connection-status').textContent = text;
+            const dot = document.querySelector('.status-dot');
+            const colors = {
+                'connected': 'var(--accent-green)',
+                'disconnected': 'var(--accent-red)',
+                'reconnecting': 'var(--accent-yellow)',
+                'error': 'var(--accent-red)'
+            };
+            dot.style.background = colors[state] || 'var(--text-muted)';
+        }
+
+        function addLogEntry(log) {
+            const logId = log.id || `${log.timestamp}_${log.message?.substring(0, 50)}`;
+            if (seenLogIds.has(logId)) return;
+            seenLogIds.add(logId);
+
+            if (seenLogIds.size > 500) {
+                seenLogIds = new Set(Array.from(seenLogIds).slice(-250));
+            }
+
+            const container = document.getElementById('log-entries');
+            const placeholder = container.querySelector('.placeholder');
+            if (placeholder) placeholder.remove();
+
+            const entry = document.createElement('div');
+            entry.className = `log-entry ${log.level || 'info'}`;
+
+            const time = log.timestamp ? new Date(log.timestamp).toLocaleTimeString() : '--:--:--';
+            const level = (log.level || 'info').toUpperCase();
+
+            entry.innerHTML = `
+                <span class="log-time">${time}</span>
+                <span class="log-level ${log.level || 'info'}">${level}</span>
+                <span class="log-message">${escapeHtml(log.message || 'No message')}</span>
+            `;
+
+            container.insertBefore(entry, container.firstChild);
+
+            logCount++;
+            if (log.level === 'error') errorCount++;
+            if (log.level === 'security') securityCount++;
+
+            document.getElementById('total-logs').textContent = logCount;
+            document.getElementById('error-count').textContent = errorCount;
+            document.getElementById('security-count').textContent = securityCount;
+            document.getElementById('log-count').textContent = `${logCount} logs`;
+
+            while (container.children.length > 100) {
+                container.removeChild(container.lastChild);
+            }
+        }
+
+        function escapeHtml(text) {
+            const div = document.createElement('div');
+            div.textContent = text;
+            return div.innerHTML;
+        }
+
+        async function fetchLogs(limit = 50) {
+            // Require authentication
+            if (!authToken) {
+                console.log('Not authenticated, skipping log fetch');
+                return;
+            }
+
+            const headers = { 'Authorization': `Bearer ${authToken}` };
+            if (currentProject) {
+                headers['X-Project-Id'] = currentProject;
+            }
+
+            try {
+                const res = await fetch(`/api/v1/logs?limit=${limit}`, {
+                    headers: headers
+                });
+                if (!res.ok) {
+                    if (res.status === 401) {
+                        // Token expired, logout
+                        logout();
+                    }
+                    return;
+                }
+                const data = await res.json();
+                (data.logs || []).reverse().forEach(log => addLogEntry(log));
+            } catch (e) {
+                console.error('Failed to fetch logs:', e);
+            }
+        }
+
+        function copyApiKey() {
+            navigator.clipboard.writeText(document.getElementById('api-key').value);
+            const btn = event.target;
+            btn.textContent = 'Copied!';
+            setTimeout(() => btn.textContent = 'Copy API Key', 1500);
+        }
+
+        function toggleSection(el) {
+            el.closest('.section').classList.toggle('open');
+        }
+
+        async function runAnalysis() {
+            const result = document.getElementById('analysis-result');
+            const btn = document.getElementById('analyze-btn');
+
+            btn.disabled = true;
+            btn.textContent = 'Analyzing...';
+            result.innerHTML = '<div class="loading">Analyzing logs</div>';
+
+            try {
+                const headers = { 'Content-Type': 'application/json' };
+                if (authToken) {
+                    headers['Authorization'] = `Bearer ${authToken}`;
+                }
+                if (currentProject) {
+                    headers['X-Project-Id'] = currentProject;
+                }
+
+                const res = await fetch('/api/v1/analyze', {
+                    method: 'POST',
+                    headers: headers,
+                    body: JSON.stringify({ count: 100, use_rag: true })
+                });
+
+                const data = await res.json();
+
+                // Determine severity class
+                const severityClass = data.severity >= 7 ? 'high' : data.severity >= 4 ? 'medium' : 'low';
+
+                // Build patch suggestions HTML
+                let patchHtml = '';
+                if (data.patch_suggestions && data.patch_suggestions.length > 0) {
+                    patchHtml = `
+                        <div class="section open">
+                            <div class="section-header" onclick="toggleSection(this)">
+                                <span class="section-title">🔧 Patch Suggestions (${data.patch_suggestions.length})</span>
+                                <span class="section-toggle">▼</span>
+                            </div>
+                            <div class="section-content">
+                                <div class="patch-list">
+                                    ${data.patch_suggestions.map(p => `
+                                        <div class="patch-item ${p.priority || 'medium'}">
+                                            <div class="patch-meta">
+                                                <span class="patch-priority ${p.priority || 'medium'}">${(p.priority || 'medium').toUpperCase()}</span>
+                                                <span class="patch-category">${p.category || 'general'}</span>
+                                            </div>
+                                            <div class="patch-title">${escapeHtml(p.title || 'Security Fix')}</div>
+                                            <div class="patch-desc">${escapeHtml(p.description || 'No description')}</div>
+                                        </div>
+                                    `).join('')}
+                                </div>
+                            </div>
+                        </div>
+                    `;
+                }
+
+                // Build countermeasures HTML
+                let cmHtml = '';
+                if (data.countermeasures && data.countermeasures.length > 0) {
+                    cmHtml = `
+                        <div class="section open">
+                            <div class="section-header" onclick="toggleSection(this)">
+                                <span class="section-title">⚡ Countermeasures (${data.countermeasures.length})</span>
+                                <span class="section-toggle">▼</span>
+                            </div>
+                            <div class="section-content">
+                                <ul class="countermeasure-list">
+                                    ${data.countermeasures.map(c => `<li>${escapeHtml(c)}</li>`).join('')}
+                                </ul>
+                            </div>
+                        </div>
+                    `;
+                }
+
+                result.innerHTML = `
+                    <div class="threat-card">
+                        <div class="threat-header">
+                            <div class="threat-score ${severityClass}">${data.severity}/10</div>
+                            <div class="threat-info">
+                                <div class="threat-label">${data.severity_label || 'Unknown'}</div>
+                                <div class="threat-sublabel">${data.analyzed_count || 0} logs analyzed</div>
+                            </div>
+                        </div>
+                        
+                        <div class="section open">
+                            <div class="section-header" onclick="toggleSection(this)">
+                                <span class="section-title">📋 Threat Assessment</span>
+                                <span class="section-toggle">▼</span>
+                            </div>
+                            <div class="section-content">
+                                ${escapeHtml(data.threat_assessment || 'No assessment available')}
+                            </div>
+                        </div>
+                        
+                        ${cmHtml}
+                        ${patchHtml}
+                    </div>
+                `;
+
+                document.getElementById('threat-score').textContent = data.severity;
+
+            } catch (err) {
+                result.innerHTML = `<div style="color: var(--accent-red); padding: 1rem;">Error: ${err.message}</div>`;
+            } finally {
+                btn.disabled = false;
+                btn.textContent = 'Analyze Recent Logs';
+            }
+        }
+
+        // Initialize
+        document.addEventListener('DOMContentLoaded', () => {
+            checkAuthState();
+            // Only connect websocket and poll if authenticated
+            if (authToken) {
+                connectWebSocket();
+                setInterval(() => fetchLogs(20), POLL_INTERVAL);
+            }
+        });
+
+        // ==================== Authentication ====================
+
+        let authToken = localStorage.getItem('logcentry_token');
+        let currentUser = JSON.parse(localStorage.getItem('logcentry_user') || 'null');
+        let currentProject = localStorage.getItem('logcentry_project') || '';
+
+        function checkAuthState() {
+            if (authToken && currentUser) {
+                showLoggedInState();
+                loadProjects();
+            } else {
+                showLoggedOutState();
+            }
+        }
+
+        function showLoggedInState() {
+            document.getElementById('login-btn').style.display = 'none';
+            document.getElementById('user-menu').style.display = 'block';
+            document.getElementById('project-selector').style.display = 'flex';
+            document.getElementById('user-name').textContent = currentUser.name || currentUser.email.split('@')[0];
+            document.getElementById('user-avatar').textContent = (currentUser.name || currentUser.email)[0].toUpperCase();
+
+            // Show dashboard, hide login prompt
+            document.getElementById('login-prompt').style.display = 'none';
+            document.getElementById('main-dashboard').style.display = 'block';
+
+            // Load logs with auth and start real-time updates
+            fetchLogs(50);
+            connectWebSocket();
+
+            // Start polling if not already running
+            if (!window.logPollingInterval) {
+                window.logPollingInterval = setInterval(() => fetchLogs(20), POLL_INTERVAL);
+            }
+        }
+
+        function showLoggedOutState() {
+            document.getElementById('login-btn').style.display = 'block';
+            document.getElementById('user-menu').style.display = 'none';
+            document.getElementById('project-selector').style.display = 'none';
+
+            // Hide dashboard, show login prompt
+            document.getElementById('login-prompt').style.display = 'flex';
+            document.getElementById('main-dashboard').style.display = 'none';
+
+            // Clear logs
+            const container = document.getElementById('log-entries');
+            if (container) {
+                container.innerHTML = '<div class="placeholder"><div class="placeholder-icon">📭</div><div>Sign in to view logs</div></div>';
+            }
+            logCount = 0;
+            errorCount = 0;
+            securityCount = 0;
+            seenLogIds = new Set();
+        }
+
+        function showLoginModal() {
+            document.getElementById('login-modal').classList.add('active');
+            document.getElementById('signup-modal').classList.remove('active');
+            document.getElementById('login-error').classList.remove('show');
+        }
+
+        function showSignupModal() {
+            document.getElementById('signup-modal').classList.add('active');
+            document.getElementById('login-modal').classList.remove('active');
+            document.getElementById('signup-error').classList.remove('show');
+        }
+
+        function hideModals() {
+            document.getElementById('login-modal').classList.remove('active');
+            document.getElementById('signup-modal').classList.remove('active');
+        }
+
+        async function handleLogin(event) {
+            event.preventDefault();
+            const email = document.getElementById('login-email').value;
+            const password = document.getElementById('login-password').value;
+            const btn = document.getElementById('login-submit');
+            const errorDiv = document.getElementById('login-error');
+
+            btn.disabled = true;
+            btn.textContent = 'Signing in...';
+            errorDiv.classList.remove('show');
+
+            try {
+                const res = await fetch('/api/v1/auth/login', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ email, password })
+                });
+
+                const data = await res.json();
+
+                if (!res.ok) {
+                    throw new Error(data.detail || 'Login failed');
+                }
+
+                // Save auth state
+                authToken = data.access_token;
+                currentUser = data.user;
+                localStorage.setItem('logcentry_token', authToken);
+                localStorage.setItem('logcentry_user', JSON.stringify(currentUser));
+
+                hideModals();
+                showLoggedInState();
+                loadProjects();
+
+            } catch (err) {
+                errorDiv.textContent = err.message;
+                errorDiv.classList.add('show');
+            } finally {
+                btn.disabled = false;
+                btn.textContent = 'Sign In';
+            }
+        }
+
+        async function handleSignup(event) {
+            event.preventDefault();
+            const name = document.getElementById('signup-name').value;
+            const email = document.getElementById('signup-email').value;
+            const password = document.getElementById('signup-password').value;
+            const btn = document.getElementById('signup-submit');
+            const errorDiv = document.getElementById('signup-error');
+
+            btn.disabled = true;
+            btn.textContent = 'Creating account...';
+            errorDiv.classList.remove('show');
+
+            try {
+                const res = await fetch('/api/v1/auth/signup', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ email, password, name })
+                });
+
+                const data = await res.json();
+
+                if (!res.ok) {
+                    throw new Error(data.detail || 'Signup failed');
+                }
+
+                // Save auth state
+                authToken = data.access_token;
+                currentUser = data.user;
+                localStorage.setItem('logcentry_token', authToken);
+                localStorage.setItem('logcentry_user', JSON.stringify(currentUser));
+
+                hideModals();
+                showLoggedInState();
+                loadProjects();
+
+            } catch (err) {
+                errorDiv.textContent = err.message;
+                errorDiv.classList.add('show');
+            } finally {
+                btn.disabled = false;
+                btn.textContent = 'Create Account';
+            }
+        }
+
+        function logout() {
+            authToken = null;
+            currentUser = null;
+            currentProject = '';
+            localStorage.removeItem('logcentry_token');
+            localStorage.removeItem('logcentry_user');
+            localStorage.removeItem('logcentry_project');
+            showLoggedOutState();
+            document.querySelector('.user-menu').classList.remove('open');
+        }
+
+        function toggleUserMenu() {
+            document.querySelector('.user-menu').classList.toggle('open');
+        }
+
+        async function loadProjects() {
+            if (!authToken) return;
+
+            try {
+                const res = await fetch('/api/v1/projects', {
+                    headers: { 'Authorization': `Bearer ${authToken}` }
+                });
+
+                if (!res.ok) return;
+
+                const projects = await res.json();
+                const select = document.getElementById('project-select');
+                select.innerHTML = '<option value="">All Projects</option>';
+
+                projects.forEach(p => {
+                    const opt = document.createElement('option');
+                    opt.value = p.id;
+                    opt.textContent = p.name;
+                    if (p.id === currentProject) opt.selected = true;
+                    select.appendChild(opt);
+                });
+
+                // Auto-select first project if none selected
+                if (!currentProject && projects.length > 0) {
+                    currentProject = projects[0].id;
+                    localStorage.setItem('logcentry_project', currentProject);
+                    select.value = currentProject;
+                    // Fetch logs for the auto-selected project
+                    fetchLogs(50);
+                }
+
+                if (currentProject) {
+                    fetchApiKeys(currentProject);
+                }
+
+            } catch (err) {
+                console.error('Failed to load projects:', err);
+            }
+        }
+
+        function switchProject(projectId) {
+            currentProject = projectId;
+            localStorage.setItem('logcentry_project', projectId);
+            fetchLogs(50);
+            fetchApiKeys(projectId);
+        }
+
+        async function fetchApiKeys(projectId) {
+            if (!authToken || !projectId) return;
+
+            // Also fetch alerts and risk entities
+            fetchAlerts();
+            fetchRiskEntities();
+
+            const list = document.getElementById('api-keys-list');
+            list.innerHTML = '<div class="loading-sm">Loading keys...</div>';
+
+            try {
+                const res = await fetch(`/api/v1/projects/${projectId}/keys`, {
+                    headers: { 'Authorization': `Bearer ${authToken}` }
+                });
+
+                if (!res.ok) throw new Error('Failed to load keys');
+
+                const keys = await res.json();
+                renderApiKeys(keys);
+
+            } catch (err) {
+                list.innerHTML = `<div style="color: var(--accent-red)">Error loading keys</div>`;
+                console.error(err);
+            }
+        }
+
+        function renderApiKeys(keys) {
+            const list = document.getElementById('api-keys-list');
+
+            if (keys.length === 0) {
+                list.innerHTML = '<div style="color: var(--text-muted); font-style: italic;">No API keys found</div>';
+                return;
+            }
+
+            list.innerHTML = keys.map(key => `
+                <div class="api-key-item">
+                    <div class="api-key-info">
+                        <span class="api-key-name">${escapeHtml(key.name)}</span>
+                        <span class="api-key-value">${key.key_prefix}...</span>
+                    </div>
+                    <div>
+                        <button class="btn-sm btn-danger" onclick="deleteApiKey('${key.id}')">Revoke</button>
+                    </div>
+                </div>
+            `).join('');
+        }
+
+        // --- SIEM FEATURES ---
+
+        async function fetchAlerts() {
+            if (!authToken) return;
+
+            try {
+                const headers = { 'Authorization': `Bearer ${authToken}` };
+                if (currentProject) headers['X-Project-Id'] = currentProject;
+
+                const res = await fetch('/api/v1/siem/alerts?status=new&limit=5', { headers });
+                if (!res.ok) return;
+
+                const data = await res.json();
+                renderAlerts(data.alerts);
+                const badge = document.getElementById('active-alerts-count');
+                if (badge) badge.textContent = `${data.active} Active`;
+
+            } catch (e) {
+                console.error("Failed to fetch alerts", e);
+            }
+        }
+
+        function renderAlerts(alerts) {
+            const container = document.getElementById('alerts-list');
+            if (!container) return;
+
+            if (alerts.length === 0) {
+                container.innerHTML = '<div style="color: var(--text-muted); padding: 0.5rem; text-align: center;">No active alerts ✅</div>';
+                return;
+            }
+
+            container.innerHTML = alerts.map(a => `
+                <div class="alert-item ${a.severity}">
+                    <div class="alert-header">
+                        <span class="alert-title">${escapeHtml(a.rule_name)}</span>
+                        <span class="alert-time">${new Date(a.created_at).toLocaleTimeString()}</span>
+                    </div>
+                    <div class="alert-summary">${escapeHtml(a.summary)}</div>
+                    <div class="alert-actions">
+                        <button class="btn-sm" onclick="acknowledgeAlert('${a.id}')">Acknowledge</button>
+                    </div>
+                </div>
+            `).join('');
+        }
+
+        async function acknowledgeAlert(id) {
+            if (!authToken) return;
+            try {
+                const headers = {
+                    'Authorization': `Bearer ${authToken}`,
+                    'Content-Type': 'application/json'
+                };
+                if (currentProject) headers['X-Project-Id'] = currentProject;
+
+                await fetch(`/api/v1/siem/alerts/${id}/acknowledge`, {
+                    method: 'POST',
+                    headers: headers,
+                    body: JSON.stringify({ user: currentUser.email })
+                });
+                fetchAlerts(); // Refresh
+            } catch (e) {
+                console.error(e);
+            }
+        }
+
+        async function fetchRiskEntities() {
+            if (!authToken) return;
+
+            try {
+                const headers = { 'Authorization': `Bearer ${authToken}` };
+                if (currentProject) headers['X-Project-Id'] = currentProject;
+
+                const res = await fetch('/api/v1/siem/entities/high-risk?threshold=30', { headers });
+                if (!res.ok) return;
+
+                const data = await res.json();
+                renderRiskEntities(data.entities);
+
+            } catch (e) {
+                console.error("Failed to fetch risk entities", e);
+            }
+        }
+
+        function renderRiskEntities(entities) {
+            const container = document.getElementById('risk-list');
+            if (!container) return;
+
+            if (entities.length === 0) {
+                container.innerHTML = '<div style="color: var(--text-muted); padding: 0.5rem; text-align: center;">No high risk entities</div>';
+                return;
+            }
+
+            container.innerHTML = entities.map(e => `
+                <div class="risk-item">
+                    <div>
+                        <div style="font-weight: 500;">${escapeHtml(e.entity_id)}</div>
+                        <div style="font-size: 0.7rem; color: var(--text-muted);">${e.entity_type.toUpperCase()}</div>
+                    </div>
+                    <div class="risk-score">${Math.round(e.risk_score)}%</div>
+                </div>
+            `).join('');
+        }
+
+        async function createNewApiKey() {
+            if (!currentProject) {
+                alert('Please select a project first');
+                return;
+            }
+
+            const name = prompt('Enter a name for this key (e.g. "Production Server"):', 'New Key');
+            if (!name) return;
+
+            try {
+                const res = await fetch(`/api/v1/projects/${currentProject}/keys`, {
+                    method: 'POST',
+                    headers: {
+                        'Authorization': `Bearer ${authToken}`,
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({ name })
+                });
+
+                const data = await res.json();
+                if (!res.ok) throw new Error(data.detail || 'Failed to create key');
+
+                // Show the full key
+                alert(`✅ API Key Created!\n\nKEY: ${data.key}\n\n⚠️ Copy this now! It will not be shown again.`);
+
+                // Refresh list
+                fetchApiKeys(currentProject);
+
+            } catch (err) {
+                alert('Error: ' + err.message);
+            }
+        }
+
+        async function deleteApiKey(keyId) {
+            if (!confirm('Are you sure you want to revoke this API key? This cannot be undone.')) return;
+
+            try {
+                const res = await fetch(`/api/v1/projects/${currentProject}/keys/${keyId}`, {
+                    method: 'DELETE',
+                    headers: { 'Authorization': `Bearer ${authToken}` }
+                });
+
+                if (!res.ok) throw new Error('Failed to delete key');
+
+                fetchApiKeys(currentProject);
+
+            } catch (err) {
+                alert('Error: ' + err.message);
+            }
+        }
+
+        function showApiKeys() {
+            alert('API Keys: Check /api/docs for the projects/{id}/keys endpoint');
+            document.querySelector('.user-menu').classList.remove('open');
+        }
+
+        function showProjects() {
+            alert('Projects: Check /api/docs for the projects endpoint');
+            document.querySelector('.user-menu').classList.remove('open');
+        }
+
+        // Close modals on overlay click
+        document.querySelectorAll('.modal-overlay').forEach(overlay => {
+            overlay.addEventListener('click', (e) => {
+                if (e.target === overlay) hideModals();
+            });
+        });
+
+        // Close user menu on outside click
+        document.addEventListener('click', (e) => {
+            const menu = document.querySelector('.user-menu');
+            if (menu && !menu.contains(e.target)) {
+                menu.classList.remove('open');
+            }
+        });
+
+        // Initialize Collapsible Sidebar Cards
+        document.addEventListener('DOMContentLoaded', () => {
+            document.querySelectorAll('.sidebar .card-header').forEach(header => {
+                header.addEventListener('click', (e) => {
+                    // Prevent toggle if clicking a button/interactive element inside header
+                    if (e.target.tagName === 'BUTTON' || e.target.tagName === 'A' || e.target.closest('button')) return;
+
+                    const card = header.closest('.card');
+                    card.classList.toggle('collapsed');
+                });
+            });
+        });
+
+        function switchTab(tabId, event) {
+            // Update buttons
+            document.querySelectorAll('.tab-btn').forEach(btn => btn.classList.remove('active'));
+            if (event) event.target.classList.add('active');
+
+            // Update panes
+            document.querySelectorAll('.tab-pane').forEach(pane => pane.classList.remove('active'));
+            document.getElementById(`tab-${tabId}`).classList.add('active');
+        }
+    </script>
+</body>
+
+</html>

@@ -1,0 +1,211 @@
+[
+    {
+        "id": "sigma_web_sql_injection",
+        "title": "SQL Injection Attack Detection",
+        "description": "Detects potential SQL injection attempts in web server logs by identifying common SQL injection patterns such as UNION, SELECT, INSERT, DELETE, OR/AND statements, and comment syntax.",
+        "severity": "high",
+        "log_source": "webserver",
+        "patterns": [
+            "UNION%20SELECT",
+            "OR%201%3D1",
+            "AND%201%3D1",
+            "SELECT%20*%20FROM",
+            "INSERT%20INTO",
+            "DELETE%20FROM",
+            "DROP%20TABLE",
+            "--%20",
+            "/**/",
+            "' OR '",
+            "\" OR \""
+        ],
+        "false_positive_risk": "medium",
+        "references": [
+            "https://owasp.org/www-community/attacks/SQL_Injection"
+        ]
+    },
+    {
+        "id": "sigma_web_path_traversal",
+        "title": "Path Traversal Attack Detection",
+        "description": "Detects directory traversal attempts in web server logs. Attackers use sequences like ../ to escape the web root and access sensitive files.",
+        "severity": "high",
+        "log_source": "webserver",
+        "patterns": [
+            "../",
+            "..\\",
+            "%2e%2e%2f",
+            "%2e%2e/",
+            "..%2f",
+            "/etc/passwd",
+            "/etc/shadow",
+            "C:\\Windows",
+            "boot.ini"
+        ],
+        "false_positive_risk": "low",
+        "references": [
+            "https://owasp.org/www-community/attacks/Path_Traversal"
+        ]
+    },
+    {
+        "id": "sigma_web_xss_attempt",
+        "title": "Cross-Site Scripting (XSS) Attack Detection",
+        "description": "Detects XSS attack attempts by identifying script tags, JavaScript event handlers, and common XSS payloads in web requests.",
+        "severity": "high",
+        "log_source": "webserver",
+        "patterns": [
+            "<script",
+            "javascript:",
+            "onerror=",
+            "onload=",
+            "onclick=",
+            "alert(",
+            "document.cookie",
+            "eval(",
+            "<img src=",
+            "<svg onload="
+        ],
+        "false_positive_risk": "medium",
+        "references": [
+            "https://owasp.org/www-community/attacks/xss/"
+        ]
+    },
+    {
+        "id": "sigma_web_scanner_detection",
+        "title": "Web Vulnerability Scanner Detection",
+        "description": "Identifies automated vulnerability scanners by their recognizable user-agent strings, request patterns, or probing behavior.",
+        "severity": "medium",
+        "log_source": "webserver",
+        "patterns": [
+            "sqlmap",
+            "nikto",
+            "nmap",
+            "dirbuster",
+            "gobuster",
+            "wfuzz",
+            "burp",
+            "acunetix",
+            "nessus",
+            "openvas"
+        ],
+        "false_positive_risk": "low",
+        "references": [
+            "https://github.com/SigmaHQ/sigma"
+        ]
+    },
+    {
+        "id": "sigma_auth_brute_force",
+        "title": "Brute Force Authentication Attack",
+        "description": "Detects multiple failed authentication attempts from the same source, indicating a potential brute force attack against login systems.",
+        "severity": "high",
+        "log_source": "authentication",
+        "patterns": [
+            "Failed password",
+            "authentication failure",
+            "Invalid user",
+            "Access denied",
+            "Login failed"
+        ],
+        "threshold": 5,
+        "time_window": "5m",
+        "false_positive_risk": "medium",
+        "references": [
+            "https://attack.mitre.org/techniques/T1110/"
+        ]
+    },
+    {
+        "id": "sigma_auth_impossible_travel",
+        "title": "Impossible Travel Detection",
+        "description": "Detects logins from geographically distant locations within a short time period, indicating possible credential compromise.",
+        "severity": "high",
+        "log_source": "authentication",
+        "patterns": [
+            "Successful login",
+            "Accepted publickey",
+            "session opened"
+        ],
+        "correlation_required": true,
+        "false_positive_risk": "medium",
+        "references": [
+            "https://attack.mitre.org/techniques/T1078/"
+        ]
+    },
+    {
+        "id": "sigma_system_privilege_escalation",
+        "title": "Privilege Escalation Attempt",
+        "description": "Detects attempts to escalate privileges through sudo abuse, setuid binaries, or known privilege escalation exploits.",
+        "severity": "critical",
+        "log_source": "system",
+        "patterns": [
+            "sudo:",
+            "COMMAND=",
+            "privilege escalation",
+            "setuid",
+            "root shell",
+            "uid=0"
+        ],
+        "false_positive_risk": "medium",
+        "references": [
+            "https://attack.mitre.org/techniques/T1548/"
+        ]
+    },
+    {
+        "id": "sigma_network_port_scan",
+        "title": "Port Scanning Detection",
+        "description": "Detects port scanning activity by identifying multiple connection attempts to different ports from the same source.",
+        "severity": "medium",
+        "log_source": "firewall",
+        "patterns": [
+            "SYN",
+            "connection refused",
+            "port unreachable",
+            "BLOCK"
+        ],
+        "threshold": 50,
+        "time_window": "1m",
+        "false_positive_risk": "medium",
+        "references": [
+            "https://attack.mitre.org/techniques/T1046/"
+        ]
+    },
+    {
+        "id": "sigma_malware_webshell",
+        "title": "Web Shell Activity Detection",
+        "description": "Detects potential web shell activity by identifying suspicious file access patterns, command execution through web requests.",
+        "severity": "critical",
+        "log_source": "webserver",
+        "patterns": [
+            "cmd=",
+            "exec=",
+            "system(",
+            "passthru(",
+            "shell_exec(",
+            ".php?c=",
+            ".asp?cmd=",
+            "whoami",
+            "id;",
+            "uname"
+        ],
+        "false_positive_risk": "low",
+        "references": [
+            "https://attack.mitre.org/techniques/T1505.003/"
+        ]
+    },
+    {
+        "id": "sigma_data_exfiltration",
+        "title": "Data Exfiltration Indicators",
+        "description": "Detects signs of data exfiltration including large file transfers, unusual outbound connections, or access to sensitive data stores.",
+        "severity": "critical",
+        "log_source": "network",
+        "patterns": [
+            "large transfer",
+            "unusual destination",
+            "base64",
+            "compress",
+            "encrypt",
+            "upload"
+        ],
+        "false_positive_risk": "high",
+        "references": [
+            "https://attack.mitre.org/techniques/T1041/"
+        ]
+    }
+]

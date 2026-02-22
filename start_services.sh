@@ -1,4 +1,5 @@
 #!/bin/bash
+#Nikhil Demo
 # Start the LogCentry API server and demo application
 # Kill any existing processes on ports 8000 and 5000
 fuser -k 8000/tcp 2>/dev/null

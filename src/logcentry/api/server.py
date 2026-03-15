@@ -8,6 +8,7 @@ import asyncio
 import time
 from contextlib import asynccontextmanager
 from datetime import datetime
+from functools import lru_cache
 from pathlib import Path
 from typing import Any
 
@@ -29,6 +30,7 @@ from logcentry.api.models import (
     LogResponse,
 )
 from logcentry.api.services.logs import LogService
+from logcentry.config import get_cached_settings
 from logcentry.core.models import LogBatch
 from logcentry.utils import get_logger
 
@@ -39,6 +41,14 @@ _start_time = time.time()
 
 # WebSocket connections for live updates
 _websocket_clients: list[WebSocket] = []
+
+
+@lru_cache(maxsize=1)
+def _get_cached_retriever():
+    """Get a cached RAG retriever instance to avoid reloading models per request."""
+    from logcentry.rag import create_rag_pipeline
+
+    return create_rag_pipeline(initialize_knowledge=False)
 
 
 @asynccontextmanager
@@ -210,10 +220,12 @@ def register_routes(app: FastAPI) -> None:
         auth: ApiKeyDep,
         limit: int = 100,
         level: str | None = None,
+        after_id: str | None = None,
         db: Session = Depends(get_db),
     ):
         """
         Retrieve recent logs for your project.
+        Use `after_id` for incremental polling — returns only logs received after the given log ID.
         """
         service = LogService(db)
         project_id = auth.get("project_id")
@@ -222,9 +234,25 @@ def register_routes(app: FastAPI) -> None:
             project_id=project_id,
             level=level,
             limit=limit,
+            after_id=after_id,
         )
         
         return {"logs": logs, "count": len(logs)}
+
+    @app.delete("/api/v1/logs", tags=["Logs"])
+    async def clear_logs(auth: ApiKeyDep, db: Session = Depends(get_db)):
+        """
+        Clear all logs for the authenticated project.
+        """
+        service = LogService(db)
+        project_id = auth.get("project_id")
+
+        deleted = service.clear_logs(project_id=project_id)
+        return {
+            "status": "cleared",
+            "deleted": deleted,
+            "project_id": project_id,
+        }
     
     # ==================== Analysis ====================
     
@@ -239,11 +267,18 @@ def register_routes(app: FastAPI) -> None:
             service = LogService(db)
             project_id = auth.get("project_id")
             
-            # Get logs
-            entries = service.get_log_entries(
-                project_id=project_id,
-                limit=request.count,
-            )
+            # Get logs (explicit IDs if provided, else recent logs)
+            if request.log_ids:
+                entries = service.get_log_entries_by_ids(
+                    log_ids=request.log_ids,
+                    project_id=project_id,
+                    limit=request.count,
+                )
+            else:
+                entries = service.get_log_entries(
+                    project_id=project_id,
+                    limit=request.count,
+                )
             
             if not entries:
                 return AnalysisResponse(
@@ -259,22 +294,91 @@ def register_routes(app: FastAPI) -> None:
                     analyzed_count=0,
                     timestamp=datetime.now(),
                 )
+
+            # Fast-path for clearly benign logs to avoid unnecessary LLM latency.
+            suspicious_terms = (
+                "error", "fail", "denied", "unauthorized", "attack", "inject", "sql",
+                "xss", "traversal", "exploit", "malware", "brute", "critical",
+                "security", "privilege", "escalation", "cve", "rce",
+            )
+            has_suspicious_text = any(
+                any(term in (entry.message or "").lower() for term in suspicious_terms)
+                for entry in entries
+            )
+
+            if not has_suspicious_text:
+                return AnalysisResponse(
+                    analysis_id="benign_fast_path",
+                    severity=1,
+                    severity_label="low",
+                    threat_assessment="No high-risk indicators detected in selected logs. Activity appears normal.",
+                    countermeasures=[
+                        "Continue routine monitoring",
+                        "Keep alerting thresholds and logging enabled",
+                    ],
+                    mitre_techniques=[],
+                    cves=[],
+                    patch_suggestions=[],
+                    vulnerability_categories=[],
+                    analyzed_count=len(entries),
+                    timestamp=datetime.now(),
+                )
             
             # Run analysis
             batch = LogBatch(entries=entries)
             analyzer = ThreatAnalyzer()
+            settings = get_cached_settings()
             
             rag_context = None
-            # Skip RAG for now - ChromaDB has issues on some filesystems
-            # if request.use_rag:
-            #     try:
-            #         from logcentry.rag import create_rag_pipeline
-            #         retriever = create_rag_pipeline(initialize_knowledge=True)
-            #         rag_context = retriever.retrieve_for_logs(batch)
-            #     except Exception as e:
-            #         logger.warning("rag_init_failed", error=str(e))
-            
-            result = analyzer.analyze(batch, rag_context=rag_context)
+            if request.use_rag:
+                try:
+                    retriever = _get_cached_retriever()
+                    try:
+                        rag_context = await asyncio.wait_for(
+                            asyncio.to_thread(retriever.retrieve_for_logs, batch),
+                            timeout=settings.rag_retrieval_timeout_seconds,
+                        )
+                    except asyncio.TimeoutError:
+                        logger.warning(
+                            "rag_retrieval_timeout",
+                            timeout_seconds=settings.rag_retrieval_timeout_seconds,
+                            entry_count=len(entries),
+                        )
+                        rag_context = None
+                except Exception as e:
+                    logger.warning("rag_retrieval_failed", error=str(e))
+
+            try:
+                result = await asyncio.wait_for(
+                    asyncio.to_thread(analyzer.analyze, batch, rag_context),
+                    timeout=settings.analysis_request_timeout_seconds,
+                )
+            except asyncio.TimeoutError:
+                logger.error(
+                    "analysis_timeout",
+                    timeout_seconds=settings.analysis_request_timeout_seconds,
+                    entry_count=len(entries),
+                )
+                return AnalysisResponse(
+                    analysis_id="timeout",
+                    severity=0,
+                    severity_label="Timeout",
+                    threat_assessment=(
+                        f"Analysis timed out after {settings.analysis_request_timeout_seconds}s. "
+                        "Try again with fewer logs or verify LLM provider connectivity."
+                    ),
+                    countermeasures=[
+                        "Reduce analysis scope (selected logs only)",
+                        "Verify API key and outbound network access",
+                        "Retry analysis after provider recovers",
+                    ],
+                    mitre_techniques=[],
+                    cves=[],
+                    patch_suggestions=[],
+                    vulnerability_categories=[],
+                    analyzed_count=len(entries),
+                    timestamp=datetime.now(),
+                )
             
             return AnalysisResponse(
                 analysis_id=result.id,

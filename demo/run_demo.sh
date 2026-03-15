@@ -7,6 +7,11 @@ set -e
 SCRIPT_DIR="$(cd "$(dirname "$0")" && pwd)"
 PROJECT_DIR="$(dirname "$SCRIPT_DIR")"
 
+# Activate virtual environment if available
+if [ -d "$PROJECT_DIR/.venv" ]; then
+	source "$PROJECT_DIR/.venv/bin/activate"
+fi
+
 echo "=============================================="
 echo " 🛡️  LogCentry Full Demo"
 echo "=============================================="

@@ -17,6 +17,12 @@ from logcentry.utils import get_logger
 logger = get_logger(__name__)
 
 
+def _load_cross_encoder(model_name: str):
+    """Load CrossEncoder lazily to keep startup lightweight and support graceful fallback."""
+    from sentence_transformers import CrossEncoder
+    return CrossEncoder(model_name)
+
+
 class ContextRetriever:
     """
     Retrieves relevant context from the knowledge base for RAG.
@@ -52,6 +58,31 @@ class ContextRetriever:
         
         settings = get_cached_settings()
         self.top_k = settings.retrieval_top_k
+        self.reranker_enabled = settings.rag_reranker_enabled
+        self.reranker_model = settings.rag_reranker_model
+        self.reranker_candidate_multiplier = settings.rag_reranker_candidate_multiplier
+        self.reranker_max_candidates = settings.rag_reranker_max_candidates
+        
+        self.cross_encoder = None
+
+    def _ensure_reranker(self) -> bool:
+        """Ensure reranker is loaded if enabled; disable safely on failure."""
+        if not self.reranker_enabled:
+            return False
+
+        if self.cross_encoder is not None:
+            return True
+
+        logger.info("loading_reranker", model=self.reranker_model)
+        try:
+            self.cross_encoder = _load_cross_encoder(self.reranker_model)
+            logger.info("reranker_loaded", model=self.reranker_model)
+            return True
+        except Exception as e:
+            logger.error("reranker_load_failed", error=str(e), model=self.reranker_model)
+            self.cross_encoder = None
+            self.reranker_enabled = False
+            return False
     
     def retrieve(
         self,
@@ -76,9 +107,20 @@ class ContextRetriever:
         where = None
         if sources:
             where = {"source": {"$in": sources}}
+
+        reranker_active = self._ensure_reranker()
+        
+        # If reranking, initially fetch a broader candidate pool (e.g., 3x)
+        if reranker_active:
+            fetch_k = min(
+                max(k * self.reranker_candidate_multiplier, k),
+                self.reranker_max_candidates,
+            )
+        else:
+            fetch_k = k
         
         # Search
-        results = self.vector_store.search_by_text(query, n_results=k, where=where)
+        results = self.vector_store.search_by_text(query, n_results=fetch_k, where=where)
         
         # Extract and deduplicate content
         contexts = []
@@ -91,11 +133,29 @@ class ContextRetriever:
             if content_key not in seen:
                 seen.add(content_key)
                 contexts.append(content)
+                
+        # Re-rank candidates using the CrossEncoder
+        if reranker_active and self.cross_encoder and contexts:
+            pairs = [(query, ctx) for ctx in contexts]
+            scores = self.cross_encoder.predict(pairs)
+            
+            # Combine contexts with their scores
+            scored_contexts = list(zip(contexts, scores))
+            # Sort by score descending
+            scored_contexts.sort(key=lambda x: x[1], reverse=True)
+            
+            # Take exactly top_k after sorting
+            contexts = [ctx for ctx, score in scored_contexts[:k]]
+        else:
+            # Drop extras if no re-ranking
+            contexts = contexts[:k]
         
         logger.info(
             "context_retrieved",
             query_length=len(query),
+            candidates=fetch_k,
             results=len(contexts),
+            reranked=bool(reranker_active and self.cross_encoder),
         )
         
         return contexts

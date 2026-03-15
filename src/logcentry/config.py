@@ -89,6 +89,26 @@ class Settings(BaseSettings):
         le=20,
         description="Number of documents to retrieve for RAG context",
     )
+    rag_reranker_enabled: bool = Field(
+        default=True,
+        description="Enable Cross-Encoder RAG re-ranking",
+    )
+    rag_reranker_model: str = Field(
+        default="cross-encoder/ms-marco-MiniLM-L6-v2",
+        description="Model to use for re-ranking retrieved context",
+    )
+    rag_reranker_candidate_multiplier: int = Field(
+        default=3,
+        ge=1,
+        le=10,
+        description="Multiplier for initial vector candidate pool before re-ranking",
+    )
+    rag_reranker_max_candidates: int = Field(
+        default=30,
+        ge=5,
+        le=200,
+        description="Hard cap on candidate documents scored by the Cross-Encoder",
+    )
     
     # === Dashboard ===
     dashboard_host: str = Field(
@@ -114,6 +134,18 @@ class Settings(BaseSettings):
         ge=10,
         le=1000,
         description="Maximum events to buffer before analysis",
+    )
+    analysis_request_timeout_seconds: int = Field(
+        default=45,
+        ge=5,
+        le=300,
+        description="Timeout for /api/v1/analyze requests to LLM provider",
+    )
+    rag_retrieval_timeout_seconds: int = Field(
+        default=15,
+        ge=2,
+        le=120,
+        description="Timeout for RAG context retrieval before falling back to no-context analysis",
     )
     
     # === Logging ===

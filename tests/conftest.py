@@ -6,11 +6,20 @@ Pytest fixtures for unit and integration testing.
 
 import asyncio
 import json
+import sys
 from datetime import datetime
+from pathlib import Path
 from typing import Any, Generator
 from unittest.mock import AsyncMock, MagicMock, patch
 
 import pytest
+
+
+# Ensure local src-layout package is importable when running `pytest` directly.
+PROJECT_ROOT = Path(__file__).resolve().parents[1]
+SRC_PATH = PROJECT_ROOT / "src"
+if str(SRC_PATH) not in sys.path:
+    sys.path.insert(0, str(SRC_PATH))
 
 
 # ==================== Event Loop ====================

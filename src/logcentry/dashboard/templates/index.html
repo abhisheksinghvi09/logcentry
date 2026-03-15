@@ -1286,7 +1286,10 @@
                         <div class="panel-title">
                             📋 Live Log Stream
                         </div>
-                        <span class="log-count" id="log-count">0 logs</span>
+                        <div style="display: flex; align-items: center; gap: 0.5rem;">
+                            <button class="btn-sm" onclick="clearAllLogs()" id="clear-logs-btn">Clear Logs</button>
+                            <span class="log-count" id="log-count">0 logs</span>
+                        </div>
                     </div>
                     <div class="log-entries" id="log-entries">
                         <div class="placeholder">
@@ -1379,10 +1382,127 @@
         let errorCount = 0;
         let securityCount = 0;
         let seenLogIds = new Set();
+        let recentAnalysisLogs = [];
         let ws = null;
         let reconnectAttempts = 0;
         const MAX_RECONNECT_ATTEMPTS = 10;
         const POLL_INTERVAL = 5000;
+        const ANALYSIS_LOG_BUFFER_SIZE = 300;
+
+        function rememberLogForAnalysis(log) {
+            if (!log || !log.id) return;
+
+            const normalized = {
+                id: log.id,
+                level: (log.level || 'info').toLowerCase(),
+                message: log.message || '',
+                source: log.source || '',
+                timestamp: log.timestamp || new Date().toISOString(),
+                metadata: log.metadata || {},
+            };
+
+            recentAnalysisLogs = recentAnalysisLogs.filter(item => item.id !== normalized.id);
+            recentAnalysisLogs.push(normalized);
+
+            if (recentAnalysisLogs.length > ANALYSIS_LOG_BUFFER_SIZE) {
+                recentAnalysisLogs = recentAnalysisLogs.slice(-ANALYSIS_LOG_BUFFER_SIZE);
+            }
+        }
+
+        function clearAnalysisBuffer() {
+            recentAnalysisLogs = [];
+        }
+
+        function resetLogViewState() {
+            logCount = 0;
+            errorCount = 0;
+            securityCount = 0;
+            lastSeenLogId = null;
+            seenLogIds = new Set();
+            clearAnalysisBuffer();
+
+            document.getElementById('total-logs').textContent = '0';
+            document.getElementById('error-count').textContent = '0';
+            document.getElementById('security-count').textContent = '0';
+            document.getElementById('log-count').textContent = '0 logs';
+
+            const container = document.getElementById('log-entries');
+            if (container) {
+                container.innerHTML = `
+                    <div class="placeholder">
+                        <div class="placeholder-icon">📭</div>
+                        <div>Waiting for new logs...</div>
+                        <div style="font-size: 0.75rem; margin-top: 0.5rem;">Send logs using the SDK or API</div>
+                    </div>
+                `;
+            }
+        }
+
+        function scoreLogForAnalysis(log) {
+            const level = (log.level || '').toLowerCase();
+            const text = `${log.message || ''} ${JSON.stringify(log.metadata || {})}`.toLowerCase();
+
+            let score = 0;
+
+            if (level === 'security') score += 5;
+            else if (level === 'critical') score += 4;
+            else if (level === 'error') score += 3;
+            else if (level === 'warning') score += 1;
+
+            const highSignals = [
+                'sql injection', 'xss', 'path traversal', 'command injection', 'rce',
+                'brute force', 'failed password', 'unauthorized', 'privilege escalation',
+                'lateral movement', 'payload', 'base64', 'cve-', 'mitre', 'exploit',
+            ];
+            const mediumSignals = [
+                'forbidden', 'suspicious', 'anomaly', 'token', 'csrf', 'shell',
+                'injection', 'attack', 'malware', 'credential', 'escalation',
+            ];
+
+            highSignals.forEach(signal => {
+                if (text.includes(signal)) score += 2;
+            });
+            mediumSignals.forEach(signal => {
+                if (text.includes(signal)) score += 1;
+            });
+
+            if (/\b(4\d\d|5\d\d)\b/.test(text)) score += 1;
+
+            return score;
+        }
+
+        function selectLogIdsForAnalysis(maxSelected = 100) {
+            if (!recentAnalysisLogs.length) return [];
+
+            const scored = recentAnalysisLogs
+                .map(log => ({ ...log, __score: scoreLogForAnalysis(log) }))
+                .filter(log => log.__score >= 2)
+                .sort((a, b) => {
+                    if (b.__score !== a.__score) return b.__score - a.__score;
+                    return new Date(b.timestamp).getTime() - new Date(a.timestamp).getTime();
+                });
+
+            let selected = scored.slice(0, maxSelected).map(log => log.id);
+
+            if (!selected.length) {
+                selected = recentAnalysisLogs
+                    .filter(log => ['security', 'critical', 'error'].includes((log.level || '').toLowerCase()))
+                    .sort((a, b) => new Date(b.timestamp).getTime() - new Date(a.timestamp).getTime())
+                    .slice(0, Math.min(maxSelected, 50))
+                    .map(log => log.id);
+            }
+
+            // Final fallback for normal-only traffic:
+            // always analyze a small recent window so benign streams do not trigger heavy full-history analysis.
+            if (!selected.length) {
+                selected = recentAnalysisLogs
+                    .slice(-Math.min(maxSelected, 20))
+                    .map(log => log.id)
+                    .filter(Boolean);
+            }
+
+            return selected;
+        }
 
         // WebSocket connection
         function connectWebSocket() {
@@ -1459,6 +1579,8 @@
             const time = log.timestamp ? new Date(log.timestamp).toLocaleTimeString() : '--:--:--';
             const level = (log.level || 'info').toUpperCase();
 
+            rememberLogForAnalysis(log);
+
             entry.innerHTML = `
                 <span class="log-time">${time}</span>
                 <span class="log-level ${log.level || 'info'}">${level}</span>
@@ -1487,34 +1609,57 @@
             return div.innerHTML;
         }
 
-        async function fetchLogs(limit = 50) {
-            // Require authentication
-            if (!authToken) {
-                console.log('Not authenticated, skipping log fetch');
-                return;
-            }
+        // Track the newest log we've seen for incremental polling
+        let lastSeenLogId = null;
 
-            const headers = { 'Authorization': `Bearer ${authToken}` };
-            if (currentProject) {
-                headers['X-Project-Id'] = currentProject;
-            }
-
+        // Fetch real total log count from health API and update badge
+        async function refreshLogCountBadge() {
             try {
-                const res = await fetch(`/api/v1/logs?limit=${limit}`, {
-                    headers: headers
-                });
-                if (!res.ok) {
-                    if (res.status === 401) {
-                        // Token expired, logout
-                        logout();
-                    }
-                    return;
+                const res = await fetch('/api/v1/health');
+                if (res.ok) {
+                    const data = await res.json();
+                    const total = data.log_count || 0;
+                    document.getElementById('log-count').textContent = `${total} logs`;
+                    document.getElementById('total-logs').textContent = total;
                 }
+            } catch (e) { /* silent */ }
+        }
+
+        // Initial load: fetch the most recent logs to populate the stream
+        async function fetchInitialLogs() {
+            if (!authToken) return;
+            const headers = { 'Authorization': `Bearer ${authToken}` };
+            if (currentProject) headers['X-Project-Id'] = currentProject;
+            try {
+                const res = await fetch(`/api/v1/logs?limit=100`, { headers });
+                if (!res.ok) { if (res.status === 401) logout(); return; }
                 const data = await res.json();
-                (data.logs || []).reverse().forEach(log => addLogEntry(log));
-            } catch (e) {
-                console.error('Failed to fetch logs:', e);
-            }
+                const logs = (data.logs || []).reverse();
+                logs.forEach(log => addLogEntry(log));
+                if (logs.length > 0) {
+                    lastSeenLogId = logs[0].id;
+                }
+                refreshLogCountBadge();
+            } catch (e) { console.error('Failed to fetch logs:', e); }
+        }
+
+        // Incremental poll: only fetch logs newer than the last seen
+        async function pollNewLogs() {
+            if (!authToken) return;
+            const headers = { 'Authorization': `Bearer ${authToken}` };
+            if (currentProject) headers['X-Project-Id'] = currentProject;
+            const sinceParam = lastSeenLogId ? `&after_id=${encodeURIComponent(lastSeenLogId)}` : '';
+            try {
+                const res = await fetch(`/api/v1/logs?limit=50${sinceParam}`, { headers });
+                if (!res.ok) { if (res.status === 401) logout(); return; }
+                const data = await res.json();
+                const newLogs = (data.logs || []).filter(l => !seenLogIds.has(l.id || ''));
+                newLogs.reverse().forEach(log => addLogEntry(log));
+                if (newLogs.length > 0) {
+                    lastSeenLogId = newLogs[newLogs.length - 1].id;
+                    refreshLogCountBadge();
+                }
+            } catch (e) { /* silent, retry next tick */ }
         }
 
         function copyApiKey() {
@@ -1537,6 +1682,10 @@
             result.innerHTML = '<div class="loading">Analyzing logs</div>';
 
             try {
+                const controller = new AbortController();
+                const timeoutMs = 60000;
+                const timeoutHandle = setTimeout(() => controller.abort(), timeoutMs);
+
                 const headers = { 'Content-Type': 'application/json' };
                 if (authToken) {
                     headers['Authorization'] = `Bearer ${authToken}`;
@@ -1545,11 +1694,22 @@
                     headers['X-Project-Id'] = currentProject;
                 }
 
+                const selectedLogIds = selectLogIdsForAnalysis(100);
+                const payload = {
+                    count: selectedLogIds.length || 20,
+                    use_rag: true,
+                };
+                if (selectedLogIds.length > 0) {
+                    payload.log_ids = selectedLogIds;
+                }
+
                 const res = await fetch('/api/v1/analyze', {
                     method: 'POST',
                     headers: headers,
-                    body: JSON.stringify({ count: 100, use_rag: true })
+                    body: JSON.stringify(payload),
+                    signal: controller.signal,
                 });
+                clearTimeout(timeoutHandle);
 
                 const data = await res.json();
 
@@ -1607,7 +1767,7 @@
                             <div class="threat-score ${severityClass}">${data.severity}/10</div>
                             <div class="threat-info">
                                 <div class="threat-label">${data.severity_label || 'Unknown'}</div>
-                                <div class="threat-sublabel">${data.analyzed_count || 0} logs analyzed</div>
+                                <div class="threat-sublabel">${data.analyzed_count || 0} logs analyzed${selectedLogIds.length ? ` (selected ${selectedLogIds.length})` : ''}</div>
                             </div>
                         </div>
                         
@@ -1629,21 +1789,61 @@
                 document.getElementById('threat-score').textContent = data.severity;
 
             } catch (err) {
-                result.innerHTML = `<div style="color: var(--accent-red); padding: 1rem;">Error: ${err.message}</div>`;
+                if (err.name === 'AbortError') {
+                    result.innerHTML = `<div style="color: var(--accent-red); padding: 1rem;">Error: Analysis request timed out. Please try again.</div>`;
+                } else {
+                    result.innerHTML = `<div style="color: var(--accent-red); padding: 1rem;">Error: ${err.message}</div>`;
+                }
             } finally {
                 btn.disabled = false;
                 btn.textContent = 'Analyze Recent Logs';
             }
         }
 
+        async function clearAllLogs() {
+            if (!authToken) return;
+
+            const confirmed = window.confirm('Clear all logs for the current project? This cannot be undone.');
+            if (!confirmed) return;
+
+            const btn = document.getElementById('clear-logs-btn');
+            const previousText = btn.textContent;
+            btn.disabled = true;
+            btn.textContent = 'Clearing...';
+
+            try {
+                const headers = {};
+                if (authToken) {
+                    headers['Authorization'] = `Bearer ${authToken}`;
+                }
+                if (currentProject) {
+                    headers['X-Project-Id'] = currentProject;
+                }
+
+                const res = await fetch('/api/v1/logs', {
+                    method: 'DELETE',
+                    headers,
+                });
+
+                const data = await res.json();
+                if (!res.ok) {
+                    throw new Error(data.detail || 'Failed to clear logs');
+                }
+
+                resetLogViewState();
+                await refreshLogCountBadge();
+            } catch (err) {
+                alert(`Failed to clear logs: ${err.message}`);
+            } finally {
+                btn.disabled = false;
+                btn.textContent = previousText;
+            }
+        }
+
         // Initialize
         document.addEventListener('DOMContentLoaded', () => {
             checkAuthState();
-            // Only connect websocket and poll if authenticated
-            if (authToken) {
-                connectWebSocket();
-                setInterval(() => fetchLogs(20), POLL_INTERVAL);
-            }
+            // WebSocket and polling are started inside showLoggedInState if authenticated
         });
 
         // ==================== Authentication ====================
@@ -1672,13 +1872,13 @@
             document.getElementById('login-prompt').style.display = 'none';
             document.getElementById('main-dashboard').style.display = 'block';
 
-            // Load logs with auth and start real-time updates
-            fetchLogs(50);
+            // Load recent logs on login, then start real‐time polling
+            fetchInitialLogs();
             connectWebSocket();
 
-            // Start polling if not already running
+            // Poll for new logs every 3 seconds (incremental, no duplicate traffic)
             if (!window.logPollingInterval) {
-                window.logPollingInterval = setInterval(() => fetchLogs(20), POLL_INTERVAL);
+                window.logPollingInterval = setInterval(pollNewLogs, 3000);
             }
         }
 
@@ -1692,14 +1892,11 @@
             document.getElementById('main-dashboard').style.display = 'none';
 
             // Clear logs
+            resetLogViewState();
             const container = document.getElementById('log-entries');
             if (container) {
                 container.innerHTML = '<div class="placeholder"><div class="placeholder-icon">📭</div><div>Sign in to view logs</div></div>';
             }
-            logCount = 0;
-            errorCount = 0;
-            securityCount = 0;
-            seenLogIds = new Set();
         }
 
         function showLoginModal() {
@@ -1848,8 +2045,8 @@
                     currentProject = projects[0].id;
                     localStorage.setItem('logcentry_project', currentProject);
                     select.value = currentProject;
-                    // Fetch logs for the auto-selected project
-                    fetchLogs(50);
+                    // Load logs for the auto-selected project
+                    fetchInitialLogs();
                 }
 
                 if (currentProject) {
@@ -1864,7 +2061,16 @@
         function switchProject(projectId) {
             currentProject = projectId;
             localStorage.setItem('logcentry_project', projectId);
-            fetchLogs(50);
+            // Reset incremental poll cursor and restart
+            lastSeenLogId = null;
+            if (window.logPollingInterval) {
+                clearInterval(window.logPollingInterval);
+                window.logPollingInterval = null;
+            }
+            document.getElementById('log-entries').innerHTML = '';
+            resetLogViewState();
+            fetchInitialLogs();
+            window.logPollingInterval = setInterval(pollNewLogs, 3000);
             fetchApiKeys(projectId);
         }
 

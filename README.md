@@ -8,6 +8,8 @@ LogCentry AI is a comprehensive security log analysis platform that uses Large L
 
 ## ✨ Features
 
+📘 Detailed ML/RAG documentation: see [ML_MODEL_USAGE.md](ML_MODEL_USAGE.md).
+
 ### Core Capabilities
 - 🔍 **Multi-Source Log Ingestion**: Static files (.log, .txt, .jsonl), PCAP network captures, live journalctl streaming
 - 🤖 **LLM-Powered Analysis**: Gemini 2.0 Flash for intelligent threat detection and severity scoring

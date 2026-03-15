@@ -6,12 +6,12 @@ fuser -k 8000/tcp 2>/dev/null
 fuser -k 5000/tcp 2>/dev/null
 
 # Activate virtual environment if it exists
-if [ -d "venv" ]; then
-    source venv/bin/activate
+if [ -d ".venv" ]; then
+    source .venv/bin/activate
 fi
 
 # Add src to PYTHONPATH
-export PYTHONPATH=$PYTHONPATH:$(pwd)/src
+export PYTHONPATH=$(pwd)/src:$PYTHONPATH
 
 # Start API Server
 echo "Starting LogCentry API Server..."
